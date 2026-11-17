@@ -105,7 +105,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
-    if (type === 'meeting') {
+    if (type === 'meeting' || type === 'library') {
       const front = z + atriumSide * d / 2;
       const rear = z - atriumSide * d / 2;
       const roomHeight = 2.65;
@@ -122,10 +122,52 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
           box(scene, jamb, roomHeight / 2, front, .08, roomHeight, .12, frame);
         }
       }
+      if (type === 'library') {
+        const shelves = rear + atriumSide * .28;
+        const shelfWidth = w - .7;
+        const wood = '#d8cbb8';
+        box(scene, x, .94, shelves - atriumSide * .15, shelfWidth, 1.88, .09, wood);
+        for (const height of [.13, .56, .99, 1.42, 1.85]) {
+          box(scene, x, height, shelves, shelfWidth, .045, .38, wood);
+        }
+        for (const edge of [-1, -.5, 0, .5, 1]) box(scene, x + edge * shelfWidth / 2, .95, shelves, .055, 1.85, .38, wood);
+        const bookColors = ['#8d9c9b', '#b39483', '#a4aa90', '#c5b59f', '#8b8ba4'];
+        for (let bay = 0; bay < 4; bay++) {
+          for (let level = 0; level < 4; level++) {
+            for (let book = 0; book < 8; book++) {
+              const bookHeight = .2 + ((book + level + bay) % 4) * .035;
+              box(scene, x - shelfWidth / 2 + bay * shelfWidth / 4 + .14 + book * .18,
+                .155 + level * .43 + bookHeight / 2, shelves, .12, bookHeight, .24,
+                bookColors[(book + 2 * level + bay) % bookColors.length], {}, false);
+            }
+          }
+        }
+        const readingZ = z + atriumSide * .68;
+        table(x, readingZ, 3.8, 1);
+        for (const offset of [-1.25, 0, 1.25]) chair(x + offset, readingZ - atriumSide * .89, -atriumSide);
+        continue;
+      }
       table(x, z, 3.6, 1.3);
       for (const offset of [-1.2, 0, 1.2]) {
         chair(x + offset, z + .98, 1);
         chair(x + offset, z - .98, -1);
+      }
+      continue;
+    }
+    if (type === 'oval') {
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .09, 40),
+        new THREE.MeshBasicMaterial({ color: timber }));
+      top.add(new THREE.LineSegments(new THREE.EdgesGeometry(top.geometry), outline));
+      top.scale.set(w / 2, 1, d / 2);
+      top.position.set(x, .79, z);
+      scene.add(top);
+      box(scene, x, .37, z, .26, .74, .5, frame);
+      for (const side of [-1, 1]) {
+        const seat = new THREE.Group();
+        seat.position.set(x + side * .98, 0, z);
+        seat.rotation.y = Math.PI / 2;
+        scene.add(seat);
+        chair(0, 0, side, seat);
       }
       continue;
     }

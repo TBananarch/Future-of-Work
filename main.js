@@ -29,6 +29,12 @@ for (const side of [-1, 1]) {
   workstations.push({ x: side * 8, z: 6, w: 3.8, d: 2, type: 'touchdown' });
 }
 
+workstations.push(
+  { x: -7.5, z: meetingCenter, w: 8.2, d: meetingDepth, type: 'library', atriumSide: -1 },
+  { x: 5.6, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
+  { x: 8.8, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
+);
+
 const host = document.querySelector('#model');
 function showPlan() {
   const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="#fafafa"/>`).join('');
@@ -39,14 +45,20 @@ function showPlan() {
       )).join('');
     }
     if (type === 'meeting') {
-      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#faf9f5"/>`;
+      if (type === 'library') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#dbd4c9"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#faf9f5"/>`;
+    }
+    if (type === 'oval') {
+      return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#faf9f5"/>`;
+    }
+    return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#faf9f5"/>`;
     }
     return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#faf9f5"/>`;
   }).join('');
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=meeting-rooms');
+  const { createOffice } = await import('./office.js?v=library-touchdown');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
