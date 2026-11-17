@@ -189,10 +189,10 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       continue;
     }
     if (type === 'dynamic') {
-      table(x, z, w, d, scene, workstationBlue);
+      table(x, z, w, d, scene, '#a9ae67');
       for (const offset of [-1.1, 0, 1.1]) {
-        chair(x + offset, z + 1.04, 1, scene, '#6a98a8');
-        chair(x + offset, z - 1.04, -1, scene, '#6a98a8');
+        chair(x + offset, z + 1.04, 1, scene, '#737d46');
+        chair(x + offset, z - 1.04, -1, scene, '#737d46');
       }
 
       furnitureSurface(scene, x, .86, z, .76, .07, .31, '#3d5361');
