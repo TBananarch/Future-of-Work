@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { plates, workstations }) {
+export function createOffice(host, { plates, workstations, chairPlacement }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -77,20 +77,34 @@ export function createOffice(host, { plates, workstations }) {
     box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e8dc');
   }
 
-  function table(x, z, w, d) {
-    box(scene, x, .79, z, w, .1, d, timber);
+  function table(x, z, w, d, parent = scene) {
+    box(parent, x, .79, z, w, .1, d, timber);
     for (const side of [-1, 1]) {
-      box(scene, x + side * (w / 2 - .17), .38, z, .09, .77, d * .77, frame);
+      box(parent, x + side * (w / 2 - .17), .38, z, .09, .77, d * .77, frame);
     }
   }
 
-  function chair(x, z, facing) {
-    box(scene, x, .42, z, .57, .11, .55, '#e9e9f0');
-    box(scene, x, .66, z + facing * .23, .57, .43, .09, '#e9e9f0');
-    box(scene, x, .2, z, .12, .4, .12, frame);
+  function chair(x, z, facing, parent = scene) {
+    box(parent, x, .42, z, .57, .11, chairPlacement.seatDepth, '#e9e9f0');
+    box(parent, x, .66, z + facing * chairPlacement.backOffset, .57, .43, chairPlacement.backDepth, '#e9e9f0');
+    box(parent, x, .2, z, .12, .4, .12, frame);
   }
 
   for (const { x, z, w, d, type } of workstations) {
+    if (type === 'desk') {
+      const cluster = new THREE.Group();
+      cluster.position.set(x, 0, z);
+      cluster.rotation.y = Math.PI / 2;
+      scene.add(cluster);
+      for (const row of [-1, 1]) {
+        for (const side of [-1, 1]) {
+          table(row * w / 2, side * d / 2, w - .025, d - .025, cluster);
+          chair(row * w / 2, side * chairPlacement.offset, side, cluster);
+          box(cluster, row * w / 2, 1.02, side * .09, .63, .38, .06, '#b5bac7');
+        }
+      }
+      continue;
+    }
     if (type === 'meeting' || type === 'booth') {
       box(scene, x, 1.04, z - d / 2, w + 1, 2.08, .12, wall);
       box(scene, x - (w + 1) / 2, 1.04, z, .12, 2.08, d, wall);
@@ -107,8 +121,7 @@ export function createOffice(host, { plates, workstations }) {
     const seats = w > 3 ? [-1.2, 0, 1.2] : [0];
     for (const offset of seats) {
       chair(x + offset, z + .94, 1);
-      if (type === 'meeting' || type === 'desk') chair(x + offset, z - .94, -1);
-      if (type === 'desk') box(scene, x + offset, 1.02, z, .63, .38, .06, '#b5bac7');
+      if (type === 'meeting') chair(x + offset, z - .94, -1);
     }
   }
 
