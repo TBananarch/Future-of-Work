@@ -188,6 +188,22 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
+    if (type === 'planter') {
+      furnitureSurface(scene, x, .22, z, w, .44, d, '#b6a48b');
+      furnitureSurface(scene, x, .446, z, w - .12, .025, d - .12, '#594d3c');
+      const leafColors = ['#72804d', '#8d975e', '#526440'];
+      for (let tuft = 0; tuft < 17; tuft++) {
+        for (let blade = 0; blade < 3; blade++) {
+          const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 5),
+            new THREE.MeshBasicMaterial({ color: leafColors[(tuft + blade) % leafColors.length] }));
+          leaf.scale.set(.085, .17 + (tuft % 3) * .025, .07);
+          leaf.position.set(x + (tuft - 8) * .24 + (blade - 1) * .059, .54, z + (blade - 1) * .11);
+          leaf.rotation.z = (blade - 1) * .55;
+          scene.add(leaf);
+        }
+      }
+      continue;
+    }
     if (type === 'dynamic') {
       table(x, z, w, d, scene, '#a9ae67');
       for (const offset of [-1.1, 0, 1.1]) {
@@ -222,11 +238,6 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
         chair(0, 0, side, seat);
       }
       continue;
-    }
-    if (type === 'booth') {
-      box(scene, x, 1.04, z - d / 2, w + 1, 2.08, .12, wall);
-      box(scene, x - (w + 1) / 2, 1.04, z, .12, 2.08, d, wall);
-      box(scene, x + (w + 1) / 2, 1.04, z, .08, 2.08, d, '#b4c9d4', glass);
     }
     if (type === 'collaboration') {
       table(x, z, w, d, scene, '#c6a46a');

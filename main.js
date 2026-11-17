@@ -24,9 +24,13 @@ for (const side of [-1, 1]) {
   for (const [x, roomWidth] of [[-15, 6.2], [0, 5.4], [15, 6.2]]) {
     workstations.push({ x, z: side * meetingCenter, w: roomWidth, d: meetingDepth, type: 'meeting', atriumSide: -side });
   }
-  workstations.push({ x: side * 8, z: -5, w: 2.2, d: 2.1, type: 'booth' });
   workstations.push({ x: side * 8, z: 0, w: 3.8, d: 1.35, type: 'collaboration' });
-  workstations.push({ x: side * 8, z: 6, w: 3.8, d: 2, type: 'touchdown' });
+  for (const z of [-6.2, 6.8]) {
+    workstations.push({ x: side * 8, z, w: 3.5, d: 1.4, type: 'dynamic' });
+  }
+  for (const z of [-3.65, 4.15]) {
+    workstations.push({ x: side * 8.65, z, w: 4.4, d: .55, type: 'planter' });
+  }
 }
 
 for (const x of [-9.9, -4.8, 4.8, 9.9]) {
@@ -55,6 +59,9 @@ function showPlan() {
     if (type === 'collaboration') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#e0d6ba"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#929657"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#929657"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#e0d6ba"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#e0d6ba"/>`;
     }
+    if (type === 'planter') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#87956a"/>`;
+    }
     if (type === 'dynamic') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#a9ae67"/><rect x="${x-.33}" y="${z-.12}" width=".66" height=".24" rx=".03" fill="#3d5361"/>`;
     }
@@ -68,7 +75,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=olive-workstations');
+  const { createOffice } = await import('./office.js?v=planted-work-areas');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
