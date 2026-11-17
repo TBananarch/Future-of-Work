@@ -51,14 +51,16 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   // Two glazed wings frame a 20 m approach to either side of the atrium.
   for (const side of [-1, 1]) {
     const facade = side * 24;
-    for (let x = -21; x <= 21; x += 3) {
-      box(scene, x, -.5, facade, .13, 6.2, .2, frame);
+    const bayWidth = 1.5;
+    const mullionWidth = .055;
+    for (let x = -21; x <= 21; x += bayWidth) {
+      box(scene, x, -.5, facade, mullionWidth, 6.2, .105, frame, {}, false);
       if (x < 21) {
-        box(scene, x + 1.5, -1.95, facade, 2.86, 3.1, .07, '#a8b2c8', glass);
-        box(scene, x + 1.5, 1.35, facade, 2.86, 2.6, .07, '#bdd0dc', glass);
+        box(scene, x + bayWidth / 2, -1.95, facade, bayWidth - mullionWidth, 3.1, .045, '#a8b2c8', glass);
+        box(scene, x + bayWidth / 2, 1.35, facade, bayWidth - mullionWidth, 2.6, .045, '#bdd0dc', glass);
       }
     }
-    for (const y of [-3.52, -.46, 2.7]) box(scene, 0, y, facade, 42, .12, .18, frame);
+    for (const y of [-3.52, -.46, 2.7]) box(scene, 0, y, facade, 42, .064, .105, frame, {}, false);
   }
 
   for (const side of [-1, 1]) {
@@ -141,20 +143,35 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       const roomHeight = 2.65;
       const doorWidth = 1.05;
       const glassWidth = (w - doorWidth) / 2;
-      box(scene, x, roomHeight / 2, rear, w, roomHeight, meetingWallThickness, '#b4c9d4', glass);
-      box(scene, x, roomHeight - .06, rear, w, .12, .12, frame);
-      box(scene, x, roomHeight - .06, front, w, .12, .12, frame);
+      const mullion = .052;
+      const glazingColor = '#b4c9d4';
+      box(scene, x, roomHeight / 2, rear, w, roomHeight, meetingWallThickness, glazingColor, glass);
+      for (const wallZ of [front, rear]) {
+        box(scene, x, roomHeight - mullion / 2, wallZ, w, mullion, .08, frame, {}, false);
+      }
+      const rearPanels = Math.ceil(w / 1.35);
+      for (let panel = 1; panel < rearPanels; panel++) {
+        box(scene, x - w / 2 + panel * w / rearPanels, roomHeight / 2, rear, mullion, roomHeight, .08, frame, {}, false);
+      }
       for (const side of [-1, 1]) {
         const end = x + side * w / 2;
         // The adjacent meeting rooms provide the library's shared glass partitions.
         if (type !== 'library') {
-          box(scene, end, roomHeight / 2, z, .08, roomHeight, d, '#b4c9d4', glass);
-          box(scene, end, roomHeight - .06, z, .12, .12, d, frame);
-          box(scene, end, roomHeight / 2, rear, .08, roomHeight, .12, frame);
-          box(scene, end, roomHeight / 2, front, .08, roomHeight, .12, frame);
+          box(scene, end, roomHeight / 2, z, .045, roomHeight, d, glazingColor, glass);
+          box(scene, end, roomHeight - mullion / 2, z, .08, mullion, d, frame, {}, false);
+          for (let panel = 1; panel < 4; panel++) {
+            box(scene, end, roomHeight / 2, z - d / 2 + panel * d / 4, .08, roomHeight, mullion, frame, {}, false);
+          }
+          for (const wallZ of [front, rear]) {
+            box(scene, end, roomHeight / 2, wallZ, mullion, roomHeight, .08, frame, {}, false);
+          }
         }
-        box(scene, x + side * (doorWidth / 2 + glassWidth / 2), roomHeight / 2, front, glassWidth, roomHeight, .08, '#b4c9d4', glass);
-        box(scene, x + side * doorWidth / 2, roomHeight / 2, front, .08, roomHeight, .12, frame);
+        box(scene, x + side * (doorWidth / 2 + glassWidth / 2), roomHeight / 2, front, glassWidth, roomHeight, .045, glazingColor, glass);
+        const frontPanels = Math.ceil(glassWidth / 1.35);
+        for (let panel = 0; panel < frontPanels; panel++) {
+          const mullionX = x + side * (doorWidth / 2 + panel * glassWidth / frontPanels);
+          box(scene, mullionX, roomHeight / 2, front, mullion, roomHeight, .08, frame, {}, false);
+        }
       }
       if (type === 'library') {
         const shelves = rear + atriumSide * .28;
