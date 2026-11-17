@@ -84,7 +84,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=energy-print');
+  const { createOffice } = await import('./office.js?v=program-callouts');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
