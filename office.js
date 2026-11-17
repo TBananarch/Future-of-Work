@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { plates, workstations, chairPlacement }) {
+export function createOffice(host, { plates, workstations, chairPlacement, deskRows }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -41,10 +41,10 @@ export function createOffice(host, { plates, workstations, chairPlacement }) {
   const timber = '#f4f1eb';
   const glass = { transparent: true, opacity: .2, depthWrite: false };
 
-  for (const { x, z, w, d, color } of plates) {
-    box(scene, x, -.22, z, w, .44, d, '#dcdbe5');
-    box(scene, x, .012, z, w - .04, .025, d - .04, color, {}, false);
-    box(scene, x, -3.7, z, w, .32, d, '#e8e7ee');
+  for (const { x, z, w, d } of plates) {
+    box(scene, x, -.22, z, w, .44, d, '#dedede');
+    box(scene, x, .012, z, w - .04, .025, d - .04, '#fafafa', {}, false);
+    box(scene, x, -3.7, z, w, .32, d, '#e8e8e8');
   }
 
   // Two glazed wings frame a 20 m approach to either side of the atrium.
@@ -71,10 +71,10 @@ export function createOffice(host, { plates, workstations, chairPlacement }) {
     }
   }
 
-  box(scene, 0, -3.7, 0, 8, .32, 8, '#dedde4');
+  box(scene, 0, -3.7, 0, 8, .32, 8, '#dedede');
   for (let step = 0; step < 20; step++) {
     const rise = (step + 1) * .175;
-    box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e8dc');
+    box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e7e7');
   }
 
   function table(x, z, w, d, parent = scene) {
@@ -96,11 +96,11 @@ export function createOffice(host, { plates, workstations, chairPlacement }) {
       cluster.position.set(x, 0, z);
       cluster.rotation.y = Math.PI / 2;
       scene.add(cluster);
-      for (const row of [-1, 1]) {
+      for (const row of deskRows) {
         for (const side of [-1, 1]) {
-          table(row * w / 2, side * d / 2, w - .025, d - .025, cluster);
-          chair(row * w / 2, side * chairPlacement.offset, side, cluster);
-          box(cluster, row * w / 2, 1.02, side * .09, .63, .38, .06, '#b5bac7');
+          table(row * w, side * d / 2, w - .025, d - .025, cluster);
+          chair(row * w, side * chairPlacement.offset, side, cluster);
+          box(cluster, row * w, 1.02, side * .09, .63, .38, .06, '#b5bac7');
         }
       }
       continue;
@@ -125,60 +125,7 @@ export function createOffice(host, { plates, workstations, chairPlacement }) {
     }
   }
 
-  // Dotted brackets identify the major neighborhoods in the axonometric view.
-  function bracket(points, color) {
-    const dots = [];
-    for (let i = 1; i < points.length; i++) {
-      const a = new THREE.Vector3(...points[i - 1]);
-      const b = new THREE.Vector3(...points[i]);
-      const steps = Math.ceil(a.distanceTo(b) / .55);
-      for (let step = 0; step < steps; step++) dots.push(a.clone().lerp(b, step / steps));
-    }
-    dots.push(new THREE.Vector3(...points.at(-1)));
-    const geometry = new THREE.BufferGeometry().setFromPoints(dots);
-    const textureCanvas = document.createElement('canvas');
-    textureCanvas.width = textureCanvas.height = 32;
-    const ctx = textureCanvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(16, 16, 14, 0, Math.PI * 2);
-    ctx.fill();
-    scene.add(new THREE.Points(geometry, new THREE.PointsMaterial({
-      color, map: new THREE.CanvasTexture(textureCanvas), size: .24, transparent: true, alphaTest: .4,
-    })));
-  }
-  for (const side of [-1, 1]) {
-    bracket([[-19, 2.9, side * 23], [-19, 2.9, side * 26], [19, 2.9, side * 26], [19, 2.9, side * 23]], '#235970');
-    bracket([[side * 12, 2, -11], [side * 14, 2, -11], [side * 14, 2, 11], [side * 12, 2, 11]], '#9ab745');
-  }
-
-  const tags = [
-    { x: -10, z: -26, text: 'Business Neighborhood' },
-    { x: 10, z: 26, text: 'Business Neighborhood' },
-    { x: -14, z: 0, text: 'Dynamic Space', dynamic: true },
-    { x: 14, z: 0, text: 'Dynamic Space', dynamic: true },
-    { x: 8, z: -5, text: 'Focus' },
-    { x: -15, z: -15.5, text: 'Meeting' },
-    { x: 15, z: 15.5, text: 'Meeting' },
-    { x: 8, z: 6, text: 'Individual Work' },
-    { x: -8, z: 1, text: 'Collaboration' },
-  ].map(({ x, z, text, dynamic }) => {
-    const label = document.createElement('span');
-    label.className = dynamic ? 'annotation dynamic' : 'annotation';
-    label.textContent = text;
-    host.append(label);
-    return { label, anchor: new THREE.Vector3(x, 3.2, z) };
-  });
-
-  const projected = new THREE.Vector3();
-  function render() {
-    renderer.render(scene, camera);
-    for (const { label, anchor } of tags) {
-      projected.copy(anchor).project(camera);
-      label.style.left = `${(projected.x + 1) * 50}%`;
-      label.style.top = `${(1 - projected.y) * 50}%`;
-    }
-  }
+  const render = () => renderer.render(scene, camera);
 
   function resize() {
     const { clientWidth: w, clientHeight: h } = host;
