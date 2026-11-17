@@ -30,7 +30,7 @@ for (const side of [-1, 1]) {
 }
 
 workstations.push(
-  { x: -7.5, z: meetingCenter, w: 8.2, d: meetingDepth, type: 'library', atriumSide: -1 },
+  { x: -7.3, z: meetingCenter, w: 9.2, d: meetingDepth, type: 'library', atriumSide: -1 },
   { x: 5.6, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
   { x: 8.8, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
 );
@@ -61,7 +61,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=collaboration-hubs');
+  const { createOffice } = await import('./office.js?v=glazed-furniture');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
