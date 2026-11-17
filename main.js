@@ -25,7 +25,7 @@ function showPlan() {
 }
 
 try {
-  const { createOffice } = await import('./office.js');
+  const { createOffice } = await import('./office.js?v=atrium');
   const canvas = createOffice(host, { width, depth, workstations });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
