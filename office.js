@@ -9,13 +9,13 @@ export function createOffice(host, { width, depth, workstations }) {
   renderer.shadowMap.enabled = false;
   const canvas = renderer.domElement;
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', 'Interactive cutaway of the concept office');
+  canvas.setAttribute('aria-label', 'Interactive cutaway of an office floor plate, 20 meters from exterior glazing to the atrium edge');
   host.append(canvas);
 
   const camera = new THREE.OrthographicCamera(-17, 17, 12, -12, .1, 140);
   camera.position.set(28, 27, 28);
   const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, .4, 0);
+  controls.target.set(0, .1, 1.6);
   controls.enablePan = false;
   controls.maxPolarAngle = Math.PI * .46;
   controls.minZoom = .65;
@@ -49,6 +49,19 @@ export function createOffice(host, { width, depth, workstations }) {
     box(scene, x, 1.42, glazing, .09, 2.65, .15, frame);
   }
   box(scene, 0, 1.48, glazing, width - .1, 2.4, .07, '#90c8d0', { transparent: true, opacity: .24, depthWrite: false });
+
+  // The near edge overlooks the atrium. Low cutaway returns expose the void.
+  const atriumEdge = depth / 2;
+  const atriumDepth = 6;
+  box(scene, 0, -3.8, atriumEdge + atriumDepth / 2, width, .24, atriumDepth, '#f2eee6');
+  for (const x of [-width / 2, width / 2]) {
+    box(scene, x, -1.91, atriumEdge + atriumDepth / 2, .2, 3.76, atriumDepth, wall);
+  }
+  box(scene, 0, .98, atriumEdge, width, .08, .09, frame);
+  for (let x = -width / 2; x <= width / 2; x += 2) {
+    box(scene, x, .49, atriumEdge, .055, .98, .065, frame);
+  }
+  box(scene, 0, .5, atriumEdge, width - .08, .92, .05, '#a8c5c5', { transparent: true, opacity: .16, depthWrite: false });
 
   function table(x, z, w, d) {
     box(scene, x, .79, z, w, .1, d, timber);
@@ -113,7 +126,7 @@ export function createOffice(host, { width, depth, workstations }) {
     const { clientWidth: w, clientHeight: h } = host;
     if (!w || !h) return;
     const aspect = w / h;
-    const halfHeight = Math.max(8.15, 14.6 / aspect);
+    const halfHeight = Math.max(10.4, 18.1 / aspect);
     Object.assign(camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
