@@ -188,6 +188,63 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
+    if (type === 'kitchen' || type === 'printing') {
+      const kitchen = type === 'kitchen';
+      const cabinetColor = kitchen ? '#87916a' : '#b48886';
+      const cabinetWidth = w / 4;
+      for (let bay = 0; bay < 4; bay++) {
+        const cabinetX = x + (bay - 1.5) * cabinetWidth;
+        furnitureSurface(scene, cabinetX, .48, z, cabinetWidth - .04, .76, d - .08, cabinetColor);
+        box(scene, cabinetX, .72, z + (d - .06) / 2, .23, .024, .04, '#665e50');
+      }
+      furnitureSurface(scene, x, .91, z, w, .09, d, '#d8c5a0');
+
+      if (kitchen) {
+        furnitureSurface(scene, x - 1.8, .958, z, .68, .018, .47, '#839398');
+        box(scene, x - 1.8, 1.08, z - .21, .045, .24, .045, '#66797b');
+        box(scene, x - 1.8, 1.2, z - .14, .045, .045, .18, '#66797b');
+        furnitureSurface(scene, x + 1.4, 1.2, z - .06, .85, .49, .54, '#3d5361');
+        box(scene, x + 1.4, 1.16, z + .218, .54, .17, .02, '#8d9c9b');
+        box(scene, x + 1.4, 1.02, z + .22, .65, .05, .22, '#6b7f86');
+        for (const offset of [0, .23, .46]) {
+          const cup = new THREE.Mesh(new THREE.CylinderGeometry(.075, .055, .13, 16),
+            new THREE.MeshBasicMaterial({ color: '#f3ead8' }));
+          cup.position.set(x + 2.08 + offset, 1.02, z + .1);
+          scene.add(cup);
+        }
+      } else {
+        for (const offset of [-1.68, -.56]) {
+          furnitureSurface(scene, x + offset, 1.18, z, .86, .45, .83, '#e4e5df');
+          box(scene, x + offset, 1.21, z + .423, .58, .095, .018, '#3d5361');
+          box(scene, x + offset, 1.407, z, .61, .02, .54, '#a7aead');
+          box(scene, x + offset, 1.164, z + .49, .33, .018, .28, '#ffffff');
+        }
+        furnitureSurface(scene, x + .65, 1.03, z, .72, .14, .58, '#5b777a');
+        box(scene, x + .65, 1.13, z, .61, .065, .11, '#323d43');
+        const lever = box(scene, x + .96, 1.27, z - .04, .045, .06, .49, '#323d43');
+        lever.rotation.x = -.65;
+        for (const [index, offset] of [1.45, 1.95].entries()) {
+          box(scene, x + offset, 1.015 + index * .02, z + .12, .42, .12 + index * .04, .46, '#f5f1e7');
+        }
+      }
+      continue;
+    }
+    if (type === 'coffee') {
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .055, 30),
+        new THREE.MeshBasicMaterial({ color: '#c6a36d' }));
+      top.position.set(x, .42, z);
+      scene.add(top);
+      furnitureLeg(scene, x, z, .4, .065, 0, 0);
+      for (const side of [-1, 1]) {
+        const seat = new THREE.Group();
+        seat.position.set(x + side * .65, 0, z);
+        seat.rotation.y = Math.PI / 2;
+        seat.scale.set(1, .8, 1);
+        scene.add(seat);
+        chair(0, 0, side, seat, side === -1 ? '#b48886' : '#548d9e');
+      }
+      continue;
+    }
     if (type === 'planter') {
       furnitureSurface(scene, x, .22, z, w, .44, d, '#b6a48b');
       furnitureSurface(scene, x, .446, z, w - .12, .025, d - .12, '#594d3c');

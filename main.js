@@ -43,6 +43,12 @@ workstations.push(
   { x: 8.8, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
 );
 
+workstations.push(
+  { x: 0, z: -9.65, w: 5.8, d: .85, type: 'kitchen' },
+  { x: 0, z: 8.2, w: 5.3, d: 1.25, type: 'printing' },
+  ...[-2.6, 0, 2.6].map(x => ({ x, z: -5.55, w: 1.9, d: .8, type: 'coffee' })),
+);
+
 const host = document.querySelector('#model');
 function showPlan() {
   const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="#fafafa"/>`).join('');
@@ -58,6 +64,9 @@ function showPlan() {
     }
     if (type === 'collaboration') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#e0d6ba"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#929657"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#929657"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#e0d6ba"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#e0d6ba"/>`;
+    }
+    if (type === 'kitchen' || type === 'printing' || type === 'coffee') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".1" fill="#d8c5a0"/>`;
     }
     if (type === 'planter') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#87956a"/>`;
@@ -75,7 +84,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=planted-work-areas');
+  const { createOffice } = await import('./office.js?v=energy-print');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
