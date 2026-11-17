@@ -45,30 +45,30 @@ function showPlan() {
   const furniture = workstations.map(({ x, z, w, d, type }) => {
     if (type === 'desk') {
       return deskRows.flatMap(row => [-1, 1].map(side =>
-        `<rect x="${x + (side - 1) * d / 2}" y="${z + (row - .5) * w}" width="${d}" height="${w}" fill="#faf9f5"/>`,
+        `<rect x="${x + (side - 1) * d / 2}" y="${z + (row - .5) * w}" width="${d}" height="${w}" fill="#e0d6ba"/>`,
       )).join('');
     }
     if (type === 'meeting') {
       if (type === 'library') {
-      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#dbd4c9"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#faf9f5"/>`;
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#c8b393"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#e0d6ba"/>`;
     }
     if (type === 'collaboration') {
-      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#faf9f5"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#c3cba7"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#c3cba7"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#faf9f5"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#faf9f5"/>`;
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#e0d6ba"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#929657"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#929657"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#e0d6ba"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#e0d6ba"/>`;
     }
     if (type === 'dynamic') {
-      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#acd1e5"/><rect x="${x-.33}" y="${z-.12}" width=".66" height=".24" rx=".03" fill="#3d5361"/>`;
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#9cbec4"/><rect x="${x-.33}" y="${z-.12}" width=".66" height=".24" rx=".03" fill="#3d5361"/>`;
     }
     if (type === 'oval') {
-      return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#faf9f5"/>`;
+      return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#e0d6ba"/>`;
     }
-    return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#faf9f5"/>`;
+    return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#e0d6ba"/>`;
     }
-    return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#faf9f5"/>`;
+    return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#e0d6ba"/>`;
   }).join('');
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=dynamic-workstations');
+  const { createOffice } = await import('./office.js?v=painting-palette');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {

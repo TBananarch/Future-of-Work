@@ -39,7 +39,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
 
   const wall = '#f5f4fa';
   const frame = '#b7b8c3';
-  const timber = '#f4f1eb';
+  const timber = '#e0d6ba';
   const glass = { transparent: true, opacity: .2, depthWrite: false };
 
   for (const { x, z, w, d } of plates) {
@@ -78,8 +78,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e7e7');
   }
 
-  const workstationBlue = '#acd1e5';
-  const oak = '#cfaa7f';
+  const workstationBlue = '#9cbec4';
+  const oak = '#a38763';
 
   function furnitureSurface(parent, x, y, z, w, h, d, color) {
     const geometry = new RoundedBoxGeometry(w, h, d, 2, Math.min(h / 2, .055));
@@ -109,7 +109,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
-  function chair(x, z, facing, parent = scene, color = '#c4c8cb') {
+  function chair(x, z, facing, parent = scene, color = '#a4a572') {
     furnitureSurface(parent, x, .45, z, .57, .095, chairPlacement.seatDepth, color);
     furnitureSurface(parent, x, .67, z + facing * chairPlacement.backOffset,
       .55, .39, chairPlacement.backDepth, color);
@@ -129,7 +129,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       for (const row of deskRows) {
         for (const side of [-1, 1]) {
           table(row * w, side * d / 2, w - .025, d - .025, cluster, workstationBlue);
-          chair(row * w, side * chairPlacement.offset, side, cluster, '#7daac3');
+          chair(row * w, side * chairPlacement.offset, side, cluster, '#6a98a8');
           box(cluster, row * w, 1.02, side * .09, .63, .38, .06, '#b5bac7');
         }
       }
@@ -159,7 +159,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       if (type === 'library') {
         const shelves = rear + atriumSide * .28;
         const shelfWidth = w - .7;
-        const wood = '#d8cbb8';
+        const wood = '#c8b393';
         box(scene, x, .94, shelves - atriumSide * .15, shelfWidth, 1.88, .09, wood);
         for (const height of [.13, .56, .99, 1.42, 1.85]) {
           box(scene, x, height, shelves, shelfWidth, .045, .38, wood);
@@ -177,11 +177,11 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
           }
         }
         const readingZ = z + atriumSide * .68;
-        table(x, readingZ, 3.8, 1, scene, '#e5ba83');
+        table(x, readingZ, 3.8, 1, scene, '#c6a36d');
         for (const offset of [-1.25, 0, 1.25]) chair(x + offset, readingZ - atriumSide * .89, -atriumSide);
         continue;
       }
-      table(x, z, 3.6, 1.3, scene, '#ead5b8');
+      table(x, z, 3.6, 1.3, scene, '#d8c5a0');
       for (const offset of [-1.2, 0, 1.2]) {
         chair(x + offset, z + .98, 1);
         chair(x + offset, z - .98, -1);
@@ -191,8 +191,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     if (type === 'dynamic') {
       table(x, z, w, d, scene, workstationBlue);
       for (const offset of [-1.1, 0, 1.1]) {
-        chair(x + offset, z + 1.04, 1, scene, '#7daac3');
-        chair(x + offset, z - 1.04, -1, scene, '#7daac3');
+        chair(x + offset, z + 1.04, 1, scene, '#6a98a8');
+        chair(x + offset, z - 1.04, -1, scene, '#6a98a8');
       }
 
       furnitureSurface(scene, x, .86, z, .76, .07, .31, '#3d5361');
@@ -208,7 +208,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
     if (type === 'oval') {
       const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .09, 40),
-        new THREE.MeshBasicMaterial({ color: '#b8cdb0' }));
+        new THREE.MeshBasicMaterial({ color: '#a8aa5e' }));
       top.add(new THREE.LineSegments(new THREE.EdgesGeometry(top.geometry), outline));
       top.scale.set(w / 2, 1, d / 2);
       top.position.set(x, .79, z);
@@ -229,8 +229,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       box(scene, x + (w + 1) / 2, 1.04, z, .08, 2.08, d, '#b4c9d4', glass);
     }
     if (type === 'collaboration') {
-      table(x, z, w, d, scene, '#e7ad73');
-      const colors = ['#ce7968', '#82aaa0', '#b3a0cb'];
+      table(x, z, w, d, scene, '#c6a46a');
+      const colors = ['#b48886', '#548d9e', '#929657'];
       for (const [index, offset] of [-1.2, 0, 1.2].entries()) {
         chair(x + offset, z + 1.03, 1, scene, colors[index]);
         chair(x + offset, z - 1.03, -1, scene, colors[2 - index]);
@@ -252,10 +252,10 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
         scene.add(piece);
       }
 
-      roundPiece(-1.65, 2.45, .34, .42, 0, '#d88170');
-      roundPiece(1.45, 2.65, .34, .42, 0, '#a995c2');
+      roundPiece(-1.65, 2.45, .34, .42, 0, '#ab6950');
+      roundPiece(1.45, 2.65, .34, .42, 0, '#b88c91');
       for (const [offsetX, offsetZ] of [[-.85, 2.75], [.7, 2.15]]) {
-        roundPiece(offsetX, offsetZ, .24, .055, .47, '#dfbf6e');
+        roundPiece(offsetX, offsetZ, .24, .055, .47, '#c3a553');
         roundPiece(offsetX, offsetZ, .075, .47, 0, frame);
       }
       continue;
