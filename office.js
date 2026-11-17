@@ -480,19 +480,19 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   Object.assign(thoughts.style, { position: 'absolute', inset: 0, pointerEvents: 'none' });
   host.append(thoughts);
   const thoughtBubbles = [
-    ['Window desks', 'I want daylight while I work.', 12.1, -21.3],
-    ['Library', 'I need uninterrupted focus.', -8.55, 15.2],
-    ['Individual desks', 'I’m here today. I need a desk before my meeting.', -8, -9.16],
-    ['Powered worktables', 'I need to plug in and get started.', 9.9, -13.9],
-    ['Touchdown desks', 'I need ten minutes to catch up.', 9.78, 15.2],
-    ['Collaboration hubs', 'Let’s sketch this out together.', 9.2, -1],
-    ['Meeting rooms', 'We need a private conversation.', 13.8, 15.95],
-  ].map(([setting, words, x, z]) => {
+    ['Designated workstation', 'I’m here every day. I need a regular desk.', 4.97, -21.3, '#c1dce3'],
+    ['Library', 'I need uninterrupted focus.', -8.55, 15.2, '#e8d1aa'],
+    ['Individual desks', 'I’m here today. I need a desk before my meeting.', -8, -9.16, '#eee3c6'],
+    ['Powered worktables', 'I need to plug in and get started.', 9.9, -13.9, '#d1d49d'],
+    ['Touchdown desks', 'I need ten minutes to catch up.', 9.78, 15.2, '#dbdda9'],
+    ['Collaboration hubs', 'Let’s sketch this out together.', 9.2, -1, '#e9cba2'],
+    ['Meeting rooms', 'We need a private conversation.', 13.8, 15.95, '#e8d8b6', true],
+  ].map(([setting, words, x, z, color, below = false]) => {
     const bubble = document.createElement('div');
     Object.assign(bubble.style, {
-      position: 'absolute', boxSizing: 'border-box', background: '#fff', color: '#111',
+      position: 'absolute', boxSizing: 'border-box', background: color, color: '#111',
       border: '1px solid #171717', borderRadius: '11px', padding: '5px 8px',
-      font: '13px/1.22 Arial, sans-serif', transform: 'translate(-50%, calc(-100% - 8px))',
+      font: '13px/1.22 Arial, sans-serif', transform: below ? 'translate(-50%, 8px)' : 'translate(-50%, calc(-100% - 8px))',
       width: 'max-content', maxWidth: 'min(145px, 37vw)', boxShadow: '0 2px 5px #0002',
     });
     const name = document.createElement('strong');
@@ -502,25 +502,30 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     const tail = document.createElement('span');
     Object.assign(tail.style, {
       position: 'absolute', width: '8px', height: '8px', left: 'calc(50% - 4px)', bottom: '-5px',
-      background: '#fff', borderRight: '1px solid #171717', borderBottom: '1px solid #171717',
+      background: color, borderRight: '1px solid #171717', borderBottom: '1px solid #171717',
       transform: 'rotate(45deg)',
     });
+    if (below) {
+      tail.style.bottom = 'auto';
+      tail.style.top = '-5px';
+      tail.style.transform = 'rotate(225deg)';
+    }
     bubble.append(tail);
     thoughts.append(bubble);
-    return { bubble, anchor: new THREE.Vector3(x, 1.3, z) };
+    return { bubble, below, anchor: new THREE.Vector3(x, 1.3, z) };
   });
 
   const projectedThought = new THREE.Vector3();
   function placeThoughts() {
     const { clientWidth: width, clientHeight: height } = host;
-    for (const { bubble, anchor } of thoughtBubbles) {
+    for (const { bubble, below, anchor } of thoughtBubbles) {
       projectedThought.copy(anchor).project(camera);
       const x = (projectedThought.x + 1) * width / 2;
       const y = (1 - projectedThought.y) * height / 2;
       bubble.style.visibility = x < 0 || x > width || y < 0 || y > height ? 'hidden' : 'visible';
       const margin = bubble.offsetWidth / 2 + 4;
       bubble.style.left = Math.max(margin, Math.min(width - margin, x)) + 'px';
-      bubble.style.top = Math.max(bubble.offsetHeight + 12, y) + 'px';
+      bubble.style.top = (below ? Math.min(height - bubble.offsetHeight - 12, y) : Math.max(bubble.offsetHeight + 12, y)) + 'px';
     }
   }
 
