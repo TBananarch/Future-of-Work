@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness }) {
+export function createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -336,71 +336,27 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
-  const svgNamespace = 'http://www.w3.org/2000/svg';
-  const overlay = document.createElementNS(svgNamespace, 'svg');
-  overlay.setAttribute('role', 'group');
-  overlay.setAttribute('aria-label', 'Workplace programs');
-  Object.assign(overlay.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
-  host.append(overlay);
-  const callouts = [
-    ['Daylight desks', -17.5, .8, 21.3, 'left'],
-    ['Library', -7.5, 1.2, 15, 'left'],
-    ['Touchdown desks', 5.6, .8, 15.2, 'left'],
-    ['Printing center', 0, 1, 8.2, 'left'],
-    ['Meeting rooms', 15, 1, -15, 'right'],
-    ['Energy hub', 0, 1, -9.65, 'right'],
-    ['Dynamic workstations', 8, .8, -6.2, 'right'],
-    ['Collaboration hubs', 8, .8, 0, 'right'],
-  ].map(([name, x, y, z, side]) => {
-    const leader = document.createElementNS(svgNamespace, 'polyline');
-    leader.setAttribute('fill', 'none');
-    leader.setAttribute('stroke', '#000');
-    leader.setAttribute('stroke-width', '1');
-    const label = document.createElementNS(svgNamespace, 'text');
-    label.textContent = name;
-    label.setAttribute('fill', '#000');
-    label.setAttribute('font-family', 'Arial, sans-serif');
-    label.setAttribute('dominant-baseline', 'middle');
-    label.setAttribute('text-anchor', side === 'left' ? 'start' : 'end');
-    overlay.append(leader, label);
-    return { anchor: new THREE.Vector3(x, y, z), side, leader, label };
-  });
-
-  function render() {
-    renderer.render(scene, camera);
-    const { clientWidth: width, clientHeight: height } = host;
-    overlay.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    const fontSize = width < 640 ? 10 : 13;
-    const gap = fontSize + 11;
-    for (const side of ['left', 'right']) {
-      const left = side === 'left';
-      const entries = callouts.filter(item => item.side === side).map(item => {
-        const point = item.anchor.clone().project(camera);
-        return { ...item, x: (point.x + 1) * width / 2, y: (1 - point.y) * height / 2 };
-      }).sort((a, b) => a.y - b.y);
-
-      let previous = 55 - gap;
-      for (const [index, item] of entries.entries()) {
-        const labelY = Math.min(height - 14 - gap * (entries.length - index - 1),
-          Math.max(previous + gap, item.y));
-        previous = labelY;
-        const labelX = left ? 14 : width - 14;
-        item.label.setAttribute('x', labelX);
-        item.label.setAttribute('y', labelY);
-        item.label.setAttribute('font-size', fontSize);
-        const lineStart = labelX + (left ? 1 : -1) * (item.label.getComputedTextLength() + 6);
-        const elbow = lineStart + (left ? 9 : -9);
-        item.leader.setAttribute('points', `${lineStart},${labelY} ${elbow},${labelY} ${item.x},${item.y}`);
-        item.leader.style.visibility = item.x >= 0 && item.x <= width && item.y >= 0 && item.y <= height ? 'visible' : 'hidden';
-      }
-    }
+  for (const points of daylightClouds) {
+    const shape = new THREE.Shape(points.map(([x, z]) => new THREE.Vector2(x, -z)));
+    const geometry = new THREE.ShapeGeometry(shape);
+    const cloud = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+      color: '#f4cf30',
+      opacity: .34,
+      transparent: true,
+      depthWrite: false,
+    }));
+    cloud.rotation.x = -Math.PI / 2;
+    cloud.position.y = .032;
+    scene.add(cloud);
   }
+
+  const render = () => renderer.render(scene, camera);
 
   function resize() {
     const { clientWidth: w, clientHeight: h } = host;
     if (!w || !h) return;
     const aspect = w / h;
-    const halfHeight = Math.max(24, (w < 640 ? 40 : 43) / aspect);
+    const halfHeight = Math.max(24, 34 / aspect);
     Object.assign(camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);

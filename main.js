@@ -49,9 +49,30 @@ workstations.push(
   ...[-2.6, 0, 2.6].map(x => ({ x, z: -5.55, w: 1.9, d: .8, type: 'coffee' })),
 );
 
+// Rounded, softly scalloped bands follow the two rows of window seating.
+const cloudHalfDepth = 2.43;
+const cloudEnd = wingLength / 2 - cloudHalfDepth;
+const cloudSide = Array.from({ length: 101 }, (_, index) => {
+  const t = index / 100;
+  return [-cloudEnd + 2 * cloudEnd * t, cloudHalfDepth - .25 * Math.sin(10 * Math.PI * t) ** 2];
+});
+const cloudCap = Array.from({ length: 21 }, (_, index) => {
+  const angle = Math.PI * index / 20;
+  return [cloudEnd + cloudHalfDepth * Math.sin(angle), cloudHalfDepth * Math.cos(angle)];
+});
+const daylightClouds = [-deskBandCenter, deskBandCenter].map(z => [
+  ...cloudSide,
+  ...cloudCap.slice(1, -1),
+  ...cloudSide.map(([x, depth]) => [-x, -depth]),
+  ...cloudCap.slice(1, -1).map(([x, depth]) => [-x, -depth]),
+].map(([x, offset]) => [x, z + offset]));
+
 const host = document.querySelector('#model');
 function showPlan() {
   const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="#fafafa"/>`).join('');
+  const clouds = daylightClouds.map(points =>
+    `<polygon points="${points.map(point => point.join(',')).join(' ')}" fill="#f4cf30" fill-opacity=".34" stroke="none"/>`,
+  ).join('');
   const furniture = workstations.map(({ x, z, w, d, type }) => {
     if (type === 'desk') {
       return deskRows.flatMap(row => [-1, 1].map(side =>
@@ -81,11 +102,11 @@ function showPlan() {
     }
     return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#e0d6ba"/>`;
   }).join('');
-  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
+  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${clouds}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=program-callouts');
-  const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
+  const { createOffice } = await import('./office.js?v=daylighting-scene');
+  const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
   showPlan();
