@@ -102,8 +102,26 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     parent.add(leg);
   }
 
+  const deskOutlines = [];
+  const deskOutlineInk = new THREE.LineBasicMaterial({ color: '#111111' });
+
   function table(x, z, w, d, parent = scene, color = timber) {
     furnitureSurface(parent, x, .79, z, w, .085, d, color);
+    if (color === workstationBlue) {
+      const corners = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+      const radius = .045;
+      const points = corners.flatMap(([side, end], corner) =>
+        Array.from({ length: 5 }, (_, step) => {
+          const angle = (corner + step / 4) * Math.PI / 2;
+          return new THREE.Vector3(x + side * (w / 2 - radius) + Math.cos(angle) * radius,
+            .839, z + end * (d / 2 - radius) + Math.sin(angle) * radius);
+        }),
+      );
+      const perimeter = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), deskOutlineInk);
+      perimeter.visible = false;
+      parent.add(perimeter);
+      deskOutlines.push(perimeter);
+    }
     for (const side of [-1, 1]) {
       for (const end of [-1, 1]) {
         furnitureLeg(parent, x + side * (w / 2 - .18), z + end * (d / 2 - .13), .75, .038, side * .07, end * .055);
@@ -795,6 +813,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       thoughts.hidden = index !== 1;
       climate.visible = index === 2;
       climateLabels.hidden = index !== 2;
+      for (const perimeter of deskOutlines) perimeter.visible = index === 2;
       render();
     },
   };
