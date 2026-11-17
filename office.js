@@ -336,6 +336,30 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
+  const climate = new THREE.Group();
+  climate.visible = false;
+  scene.add(climate);
+  const coolFloor = new THREE.Color('#7eb5d1');
+  const warmFloor = new THREE.Color('#edbf88');
+  const temperatureColor = new THREE.Color();
+  const climateMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+  for (const { x, z, w, d } of plates) {
+    const geometry = new THREE.PlaneGeometry(w - .04, d - .04, 1, 24);
+    geometry.rotateX(-Math.PI / 2);
+    const vertices = geometry.getAttribute('position');
+    const colors = [];
+    for (let vertex = 0; vertex < vertices.count; vertex++) {
+      const fromAtrium = Math.abs(z + vertices.getZ(vertex));
+      const control = THREE.MathUtils.smoothstep(fromAtrium, 4, 23);
+      temperatureColor.copy(warmFloor).lerp(coolFloor, control);
+      colors.push(temperatureColor.r, temperatureColor.g, temperatureColor.b);
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    const floorGradient = new THREE.Mesh(geometry, climateMaterial);
+    floorGradient.position.set(x, .027, z);
+    climate.add(floorGradient);
+  }
+
   const daylight = new THREE.Group();
   scene.add(daylight);
   for (const points of daylightClouds) {
@@ -590,6 +614,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     setTopic(index) {
       daylight.visible = index === 0;
       thoughts.hidden = index !== 1;
+      climate.visible = index === 2;
       render();
     },
   };

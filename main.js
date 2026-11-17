@@ -75,7 +75,7 @@ const topicDescription = document.querySelector('#topic-description');
 const topics = [
   { title: topicTitle.textContent, description: topicDescription.innerHTML },
   { title: 'Dynamic Workstations', description: 'Everyone has different workstyle needs. Hybrid schedules mean headcounts fluctuate, so a mix of settings helps people find a place that suits the task and the day.' },
-  { title: 'Adaptive Climate', description: 'Match cooling control to how long people stay. Workstations used for more than 2 hours get tighter control. Flexible settings can vary within an illustrative ±2 °C of the setpoint.' },
+  { title: 'Adaptive Climate', description: 'Cooling is most tightly controlled at the window desks, where people stay longer. Conditioning eases toward the atrium, where flexible spaces can vary by an illustrative ±2 °C around the setpoint. <br><strong style="color:#236588">Blue · tighter control</strong><br><strong style="color:#895019">Ochre · lighter conditioning</strong>' },
 ];
 let currentTopic = 0;
 let officeView;
@@ -89,7 +89,7 @@ document.querySelector('#next-topic').addEventListener('click', () => {
 
 const host = document.querySelector('#model');
 function showPlan() {
-  const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="#fafafa"/>`).join('');
+  const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="${currentTopic === 2 ? 'url(#climate-floor)' : '#fafafa'}"/>`).join('');
   const clouds = daylightClouds.map(points =>
     `<polygon points="${points.map(point => point.join(',')).join(' ')}" fill="#f1c319" fill-opacity=".34" stroke="none"/>`,
   ).join('');
@@ -122,10 +122,10 @@ function showPlan() {
     }
     return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#e0d6ba"/>`;
   }).join('');
-  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
+  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><defs><linearGradient id="climate-floor" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="-24" y2="24"><stop offset="0" stop-color="#8abbd5"/><stop offset=".5" stop-color="#edc390"/><stop offset="1" stop-color="#8abbd5"/></linearGradient></defs><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=individual-worktables');
+  const { createOffice } = await import('./office.js?v=climate-gradient');
   officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   officeView.setTopic(currentTopic);
   officeView.canvas.addEventListener('webglcontextlost', () => {
