@@ -58,10 +58,6 @@ export function createOffice(host, { plates, workstations }) {
       }
     }
     for (const y of [-3.52, -.46, 2.7]) box(scene, 0, y, facade, 42, .12, .18, frame);
-    for (const x of [-21, 21]) {
-      box(scene, x, -1.8, side * 18, .12, 3.4, 12, '#bcc9d6', glass);
-      for (const z of [12, 15, 18, 21]) box(scene, x, -.53, side * z, .16, 6.1, .16, frame);
-    }
   }
 
   for (const side of [-1, 1]) {
