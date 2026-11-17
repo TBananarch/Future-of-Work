@@ -338,15 +338,21 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
 
   for (const points of daylightClouds) {
     const shape = new THREE.Shape(points.map(([x, z]) => new THREE.Vector2(x, -z)));
-    const geometry = new THREE.ShapeGeometry(shape);
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: .95,
+      bevelEnabled: true,
+      bevelThickness: .35,
+      bevelSize: .27,
+      bevelSegments: 5,
+    });
     const cloud = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
       color: '#f4cf30',
-      opacity: .34,
+      opacity: .26,
       transparent: true,
       depthWrite: false,
     }));
     cloud.rotation.x = -Math.PI / 2;
-    cloud.position.y = .032;
+    cloud.position.y = .38;
     scene.add(cloud);
   }
 
