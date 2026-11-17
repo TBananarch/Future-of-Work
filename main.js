@@ -29,6 +29,10 @@ for (const side of [-1, 1]) {
   workstations.push({ x: side * 8, z: 6, w: 3.8, d: 2, type: 'touchdown' });
 }
 
+for (const x of [-9.9, -4.8, 4.8, 9.9]) {
+  workstations.push({ x, z: -meetingCenter, w: 3.5, d: 1.4, type: 'dynamic' });
+}
+
 workstations.push(
   { x: -7.3, z: meetingCenter, w: 9.2, d: meetingDepth, type: 'library', atriumSide: -1 },
   { x: 5.6, z: 15.2, w: 1.35, d: 2.3, type: 'oval' },
@@ -51,6 +55,9 @@ function showPlan() {
     if (type === 'collaboration') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#faf9f5"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#c3cba7"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#c3cba7"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#faf9f5"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#faf9f5"/>`;
     }
+    if (type === 'dynamic') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".08" fill="#acd1e5"/><rect x="${x-.33}" y="${z-.12}" width=".66" height=".24" rx=".03" fill="#3d5361"/>`;
+    }
     if (type === 'oval') {
       return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#faf9f5"/>`;
     }
@@ -61,7 +68,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=glazed-furniture');
+  const { createOffice } = await import('./office.js?v=dynamic-workstations');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {

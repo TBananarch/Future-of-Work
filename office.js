@@ -188,6 +188,24 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
+    if (type === 'dynamic') {
+      table(x, z, w, d, scene, workstationBlue);
+      for (const offset of [-1.1, 0, 1.1]) {
+        chair(x + offset, z + 1.04, 1, scene, '#7daac3');
+        chair(x + offset, z - 1.04, -1, scene, '#7daac3');
+      }
+
+      furnitureSurface(scene, x, .86, z, .76, .07, .31, '#3d5361');
+      for (const side of [-1, 1]) {
+        for (const offset of [-.2, .2]) {
+          box(scene, x + offset, .897, z + side * .069, .13, .008, .105, '#e8edf0', {}, false);
+          for (const slot of [-.024, .024]) {
+            box(scene, x + offset + slot, .904, z + side * .069, .014, .005, .048, '#263640', {}, false);
+          }
+        }
+      }
+      continue;
+    }
     if (type === 'oval') {
       const top = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .09, 40),
         new THREE.MeshBasicMaterial({ color: '#b8cdb0' }));
