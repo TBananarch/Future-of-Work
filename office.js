@@ -23,7 +23,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   controls.maxZoom = 2.4;
   controls.update();
 
-  const outline = new THREE.LineBasicMaterial({ color: '#777887', transparent: true, opacity: .48 });
+  const outline = new THREE.LineBasicMaterial({ color: '#444653', transparent: true, opacity: .76 });
   function box(parent, x, y, z, w, h, d, color, options = {}, edged = true) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
@@ -38,9 +38,9 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   }
 
   const wall = '#f5f4fa';
-  const frame = '#b7b8c3';
+  const frame = '#858693';
   const timber = '#e0d6ba';
-  const glass = { transparent: true, opacity: .2, depthWrite: false };
+  const glass = { transparent: true, opacity: .16, depthWrite: false };
 
   for (const { x, z, w, d } of plates) {
     box(scene, x, -.22, z, w, .44, d, '#dedede');
@@ -78,7 +78,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e7e7');
   }
 
-  const workstationBlue = '#9cbec4';
+  const workstationBlue = '#85b5c3';
   const oak = '#a38763';
 
   function furnitureSurface(parent, x, y, z, w, h, d, color) {
@@ -129,7 +129,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       for (const row of deskRows) {
         for (const side of [-1, 1]) {
           table(row * w, side * d / 2, w - .025, d - .025, cluster, workstationBlue);
-          chair(row * w, side * chairPlacement.offset, side, cluster, '#6a98a8');
+          chair(row * w, side * chairPlacement.offset, side, cluster, '#487f93');
           box(cluster, row * w, 1.02, side * .09, .63, .38, .06, '#b5bac7');
         }
       }
@@ -190,7 +190,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
     if (type === 'kitchen' || type === 'printing') {
       const kitchen = type === 'kitchen';
-      const cabinetColor = kitchen ? '#87916a' : '#b48886';
+      const cabinetColor = kitchen ? '#87916a' : '#aa7474';
       const cabinetWidth = w / 4;
       for (let bay = 0; bay < 4; bay++) {
         const cabinetX = x + (bay - 1.5) * cabinetWidth;
@@ -241,7 +241,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
         seat.rotation.y = Math.PI / 2;
         seat.scale.set(1, .8, 1);
         scene.add(seat);
-        chair(0, 0, side, seat, side === -1 ? '#b48886' : '#548d9e');
+        chair(0, 0, side, seat, side === -1 ? '#aa7474' : '#398298');
       }
       continue;
     }
@@ -262,10 +262,10 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       continue;
     }
     if (type === 'dynamic') {
-      table(x, z, w, d, scene, '#a9ae67');
+      table(x, z, w, d, scene, '#a1a653');
       for (const offset of [-1.1, 0, 1.1]) {
-        chair(x + offset, z + 1.04, 1, scene, '#737d46');
-        chair(x + offset, z - 1.04, -1, scene, '#737d46');
+        chair(x + offset, z + 1.04, 1, scene, '#626e37');
+        chair(x + offset, z - 1.04, -1, scene, '#626e37');
       }
 
       furnitureSurface(scene, x, .86, z, .76, .07, .31, '#3d5361');
@@ -297,8 +297,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       continue;
     }
     if (type === 'collaboration') {
-      table(x, z, w, d, scene, '#c6a46a');
-      const colors = ['#b48886', '#548d9e', '#929657'];
+      table(x, z, w, d, scene, '#bb8e47');
+      const colors = ['#aa7474', '#398298', '#79833e'];
       for (const [index, offset] of [-1.2, 0, 1.2].entries()) {
         chair(x + offset, z + 1.03, 1, scene, colors[index]);
         chair(x + offset, z - 1.03, -1, scene, colors[2 - index]);
@@ -346,7 +346,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       bevelSegments: 5,
     });
     const cloud = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-      color: '#f4cf30',
+      color: '#f1c319',
       opacity: .26,
       transparent: true,
       depthWrite: false,
