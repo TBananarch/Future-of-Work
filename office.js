@@ -456,7 +456,6 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       person(x + 1.2, z - 1, 0, 'seated');
     }
     if (type === 'dynamic') person(x, z + 1.04, Math.PI, 'seated');
-    if (type === 'individual') person(x, z + .94, Math.PI, 'seated');
     if (type === 'library') person(x - 1.25, z + atriumSide * (.68 - .89), atriumSide < 0 ? Math.PI : 0, 'seated');
     if (type === 'oval' || type === 'coffee') {
       const offset = type === 'oval' ? .98 : .65;
@@ -482,8 +481,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   const thoughtBubbles = [
     ['Designated workstation', 'I’m here every day. I need a regular desk.', 4.97, -21.3, '#c1dce3'],
     ['Library', 'I need uninterrupted focus.', -8.55, 15.2, '#e8d1aa'],
-    ['Individual desks', 'I’m here today. I need a desk before my meeting.', -8, -9.16, '#eee3c6'],
-    ['Powered worktables', 'I need to plug in and get started.', 9.9, -13.9, '#d1d49d'],
+    ['Individual desks', 'I’m here today. I need a desk before my meeting.', -8, -9.06, '#d1d49d'],
     ['Touchdown desks', 'I need ten minutes to catch up.', 9.78, 15.2, '#dbdda9'],
     ['Collaboration hubs', 'Let’s sketch this out together.', 9.2, -1, '#e9cba2'],
     ['Meeting rooms', 'We need a private conversation.', 13.8, 15.95, '#e8d8b6', true],
