@@ -25,7 +25,7 @@ for (const side of [-1, 1]) {
     workstations.push({ x, z: side * meetingCenter, w: roomWidth, d: meetingDepth, type: 'meeting', atriumSide: -side });
   }
   workstations.push({ x: side * 8, z: -5, w: 2.2, d: 2.1, type: 'booth' });
-  workstations.push({ x: side * 8, z: 0, w: 3.8, d: 2, type: 'lounge' });
+  workstations.push({ x: side * 8, z: 0, w: 3.8, d: 1.35, type: 'collaboration' });
   workstations.push({ x: side * 8, z: 6, w: 3.8, d: 2, type: 'touchdown' });
 }
 
@@ -48,6 +48,9 @@ function showPlan() {
       if (type === 'library') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#dbd4c9"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#faf9f5"/>`;
     }
+    if (type === 'collaboration') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" rx=".12" fill="#faf9f5"/><rect x="${x-1.05}" y="${z-2.4}" width="2.1" height=".1" fill="#fff"/><circle cx="${x-1.65}" cy="${z+2.45}" r=".34" fill="#c3cba7"/><circle cx="${x+1.45}" cy="${z+2.65}" r=".34" fill="#c3cba7"/><circle cx="${x-.85}" cy="${z+2.75}" r=".24" fill="#faf9f5"/><circle cx="${x+.7}" cy="${z+2.15}" r=".24" fill="#faf9f5"/>`;
+    }
     if (type === 'oval') {
       return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#faf9f5"/>`;
     }
@@ -58,7 +61,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=library-touchdown');
+  const { createOffice } = await import('./office.js?v=collaboration-hubs');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {

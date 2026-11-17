@@ -176,10 +176,35 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       box(scene, x - (w + 1) / 2, 1.04, z, .12, 2.08, d, wall);
       box(scene, x + (w + 1) / 2, 1.04, z, .08, 2.08, d, '#b4c9d4', glass);
     }
-    if (type === 'lounge') {
-      box(scene, x, .3, z, w, .6, 1, '#c3cba7');
-      box(scene, x, .69, z + .41, w, .5, .2, '#c3cba7');
-      table(x, z - 1.25, 1.5, .65);
+    if (type === 'collaboration') {
+      table(x, z, w, d);
+      for (const offset of [-1.2, 0, 1.2]) {
+        chair(x + offset, z + 1.03, 1);
+        chair(x + offset, z - 1.03, -1);
+      }
+
+      const boardZ = z - 2.35;
+      box(scene, x, 1.35, boardZ, 2.1, 1.12, .08, '#ffffff');
+      for (const offset of [-.92, .92]) {
+        box(scene, x + offset, .55, boardZ, .07, 1.1, .08, frame);
+        box(scene, x + offset, .05, boardZ, .1, .1, .54, frame);
+      }
+      box(scene, x, .79, boardZ + .065, 2.04, .04, .15, frame);
+
+      function roundPiece(offsetX, offsetZ, radius, height, base, color) {
+        const piece = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 24),
+          new THREE.MeshBasicMaterial({ color }));
+        piece.add(new THREE.LineSegments(new THREE.EdgesGeometry(piece.geometry), outline));
+        piece.position.set(x + offsetX, base + height / 2, z + offsetZ);
+        scene.add(piece);
+      }
+
+      roundPiece(-1.65, 2.45, .34, .42, 0, '#c3cba7');
+      roundPiece(1.45, 2.65, .34, .42, 0, '#c6c5d2');
+      for (const [offsetX, offsetZ] of [[-.85, 2.75], [.7, 2.15]]) {
+        roundPiece(offsetX, offsetZ, .24, .055, .47, timber);
+        roundPiece(offsetX, offsetZ, .075, .47, 0, frame);
+      }
       continue;
     }
 
