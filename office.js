@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { width, depth, workstations }) {
+export function createOffice(host, { plates, workstations }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -9,20 +9,20 @@ export function createOffice(host, { width, depth, workstations }) {
   renderer.shadowMap.enabled = false;
   const canvas = renderer.domElement;
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', 'Interactive cutaway of an office floor plate, 20 meters from exterior glazing to the atrium edge');
+  canvas.setAttribute('aria-label', 'Interactive cutaway of an office floor plate, with two workplace wings and a central atrium');
   host.append(canvas);
 
-  const camera = new THREE.OrthographicCamera(-17, 17, 12, -12, .1, 140);
-  camera.position.set(28, 27, 28);
+  const camera = new THREE.OrthographicCamera(-17, 17, 12, -12, .1, 220);
+  camera.position.set(48, 47, 43);
   const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, .1, 1.6);
+  controls.target.set(0, -.8, 0);
   controls.enablePan = false;
   controls.maxPolarAngle = Math.PI * .46;
   controls.minZoom = .65;
   controls.maxZoom = 2.4;
   controls.update();
 
-  const outline = new THREE.LineBasicMaterial({ color: '#353735', transparent: true, opacity: .68 });
+  const outline = new THREE.LineBasicMaterial({ color: '#777887', transparent: true, opacity: .48 });
   function box(parent, x, y, z, w, h, d, color, options = {}, edged = true) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
@@ -36,32 +36,50 @@ export function createOffice(host, { width, depth, workstations }) {
     return mesh;
   }
 
-  const wall = '#fafaf8';
-  const timber = '#e2bd94';
-  const frame = '#5b605d';
-  const glazing = -depth / 2;
-  box(scene, 0, -.22, 0, width, .44, depth, '#e5e1d9');
-  box(scene, 0, -.01, 0, width - .12, .04, depth - .12, '#faf8f3');
-  box(scene, -width / 2, 1.35, -3.5, .18, 2.7, 9, wall);
-  box(scene, 0, .13, glazing, width, .26, .18, frame);
-  box(scene, 0, 2.7, glazing, width, .12, .15, frame);
-  for (let x = -width / 2; x <= width / 2; x += 2) {
-    box(scene, x, 1.42, glazing, .09, 2.65, .15, frame);
-  }
-  box(scene, 0, 1.48, glazing, width - .1, 2.4, .07, '#90c8d0', { transparent: true, opacity: .24, depthWrite: false });
+  const wall = '#f5f4fa';
+  const frame = '#b7b8c3';
+  const timber = '#f4f1eb';
+  const glass = { transparent: true, opacity: .2, depthWrite: false };
 
-  // The near edge overlooks the atrium. Low cutaway returns expose the void.
-  const atriumEdge = depth / 2;
-  const atriumDepth = 6;
-  box(scene, 0, -3.8, atriumEdge + atriumDepth / 2, width, .24, atriumDepth, '#f2eee6');
-  for (const x of [-width / 2, width / 2]) {
-    box(scene, x, -1.91, atriumEdge + atriumDepth / 2, .2, 3.76, atriumDepth, wall);
+  for (const { x, z, w, d, color } of plates) {
+    box(scene, x, -.22, z, w, .44, d, '#dcdbe5');
+    box(scene, x, .012, z, w - .04, .025, d - .04, color, {}, false);
+    box(scene, x, -3.7, z, w, .32, d, '#e8e7ee');
   }
-  box(scene, 0, .98, atriumEdge, width, .08, .09, frame);
-  for (let x = -width / 2; x <= width / 2; x += 2) {
-    box(scene, x, .49, atriumEdge, .055, .98, .065, frame);
+
+  // Two glazed wings frame a 20 m approach to either side of the atrium.
+  for (const side of [-1, 1]) {
+    const facade = side * 24;
+    for (let x = -21; x <= 21; x += 3) {
+      box(scene, x, -.5, facade, .13, 6.2, .2, frame);
+      if (x < 21) {
+        box(scene, x + 1.5, -1.95, facade, 2.86, 3.1, .07, '#a8b2c8', glass);
+        box(scene, x + 1.5, 1.35, facade, 2.86, 2.6, .07, '#bdd0dc', glass);
+      }
+    }
+    for (const y of [-3.52, -.46, 2.7]) box(scene, 0, y, facade, 42, .12, .18, frame);
+    for (const x of [-21, 21]) {
+      box(scene, x, -1.8, side * 18, .12, 3.4, 12, '#bcc9d6', glass);
+      for (const z of [12, 15, 18, 21]) box(scene, x, -.53, side * z, .16, 6.1, .16, frame);
+    }
   }
-  box(scene, 0, .5, atriumEdge, width - .08, .92, .05, '#a8c5c5', { transparent: true, opacity: .16, depthWrite: false });
+
+  for (const side of [-1, 1]) {
+    box(scene, side * 4, .98, 0, .09, .09, 8, frame);
+    box(scene, side * 4, .49, 0, .055, .94, 8, '#bdcccc', glass);
+    box(scene, 0, .98, side * 4, 8, .09, .09, frame);
+    box(scene, 0, .49, side * 4, 8, .94, .055, '#bdcccc', glass);
+    for (const offset of [-4, -2, 0, 2, 4]) {
+      box(scene, side * 4, .49, offset, .065, .98, .065, frame);
+      box(scene, offset, .49, side * 4, .065, .98, .065, frame);
+    }
+  }
+
+  box(scene, 0, -3.7, 0, 8, .32, 8, '#dedde4');
+  for (let step = 0; step < 20; step++) {
+    const rise = (step + 1) * .175;
+    box(scene, .8, -3.5 + rise / 2, -3.7 + step * .39, 2.2, rise, .39, '#e7e8dc');
+  }
 
   function table(x, z, w, d) {
     box(scene, x, .79, z, w, .1, d, timber);
@@ -71,62 +89,93 @@ export function createOffice(host, { width, depth, workstations }) {
   }
 
   function chair(x, z, facing) {
-    box(scene, x, .42, z, .57, .11, .55, '#e9ece7');
-    box(scene, x, .66, z + facing * .23, .57, .43, .09, '#e9ece7');
+    box(scene, x, .42, z, .57, .11, .55, '#e9e9f0');
+    box(scene, x, .66, z + facing * .23, .57, .43, .09, '#e9e9f0');
     box(scene, x, .2, z, .12, .4, .12, frame);
   }
 
   for (const { x, z, w, d, type } of workstations) {
+    if (type === 'meeting' || type === 'booth') {
+      box(scene, x, 1.04, z - d / 2, w + 1, 2.08, .12, wall);
+      box(scene, x - (w + 1) / 2, 1.04, z, .12, 2.08, d, wall);
+      box(scene, x + (w + 1) / 2, 1.04, z, .08, 2.08, d, '#b4c9d4', glass);
+    }
     if (type === 'lounge') {
-      box(scene, x, .28, z + .65, w * .8, .53, .9, '#a8b2a2');
-      box(scene, x, .6, z + 1, w * .8, .52, .2, '#a8b2a2');
-      box(scene, x, .32, z - .55, 1.8, .64, .75, timber);
+      box(scene, x, .3, z, w, .6, 1, '#c3cba7');
+      box(scene, x, .69, z + .41, w, .5, .2, '#c3cba7');
+      table(x, z - 1.25, 1.5, .65);
       continue;
     }
-    if (type === 'booth') {
-      box(scene, x, 1.15, z + d / 2, w, 2.3, .16, '#c9bab1');
-      box(scene, x - w / 2, 1.15, z, .16, 2.3, d, '#c9bab1');
-    }
-    table(x, z, type === 'booth' ? 1.8 : w, .85);
-    chair(x, z + (type === 'booth' ? -.8 : .85), type === 'booth' ? -1 : 1);
-    if (type === 'desk') {
-      box(scene, x, .88, z - .2, .29, .08, .18, frame);
-      box(scene, x, 1.16, z - .23, .69, .43, .055, '#424b47');
-    }
-    if (type === 'touchdown') chair(x + 1.25, z + .85, 1);
-  }
 
-  // Warm floorboards ground the flexible work settings in the cutaway.
-  for (let row = 0; row < 11; row++) {
-    const z = 2.1 + row * .48;
-    box(scene, 0, .015, z, 22.6, .024, .465, row % 3 === 0 ? '#ead0af' : '#e7c6a1', {}, false);
-  }
-
-  function plant(x, z) {
-    const pot = new THREE.Mesh(new THREE.CylinderGeometry(.29, .22, .42, 10), new THREE.MeshBasicMaterial({ color: '#e1dfd5' }));
-    pot.position.set(x, .22, z);
-    pot.add(new THREE.LineSegments(new THREE.EdgesGeometry(pot.geometry, 38), outline));
-    scene.add(pot);
-    for (let i = 0; i < 8; i++) {
-      const angle = i * Math.PI * .76;
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 5), new THREE.MeshBasicMaterial({
-        color: ['#536f54', '#748c60', '#a2ad7d'][i % 3],
-      }));
-      leaf.scale.set(.13, .39, .07);
-      leaf.position.set(x + Math.cos(angle) * .22, .66 + (i % 3) * .12, z + Math.sin(angle) * .22);
-      leaf.rotation.set(.55 * Math.sin(angle), -angle, -.55 * Math.cos(angle));
-      scene.add(leaf);
+    table(x, z, w, type === 'meeting' ? 1.3 : .85);
+    const seats = w > 3 ? [-1.2, 0, 1.2] : [0];
+    for (const offset of seats) {
+      chair(x + offset, z + .94, 1);
+      if (type === 'meeting' || type === 'desk') chair(x + offset, z - .94, -1);
+      if (type === 'desk') box(scene, x + offset, 1.02, z, .63, .38, .06, '#b5bac7');
     }
   }
 
-  for (const [x, z] of [[-10.9, 6.2], [-4.1, 5.8], [3.6, 5.9], [10.7, -6.7], [-10.8, -6.6]]) plant(x, z);
+  // Dotted brackets identify the major neighborhoods in the axonometric view.
+  function bracket(points, color) {
+    const dots = [];
+    for (let i = 1; i < points.length; i++) {
+      const a = new THREE.Vector3(...points[i - 1]);
+      const b = new THREE.Vector3(...points[i]);
+      const steps = Math.ceil(a.distanceTo(b) / .55);
+      for (let step = 0; step < steps; step++) dots.push(a.clone().lerp(b, step / steps));
+    }
+    dots.push(new THREE.Vector3(...points.at(-1)));
+    const geometry = new THREE.BufferGeometry().setFromPoints(dots);
+    const textureCanvas = document.createElement('canvas');
+    textureCanvas.width = textureCanvas.height = 32;
+    const ctx = textureCanvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(16, 16, 14, 0, Math.PI * 2);
+    ctx.fill();
+    scene.add(new THREE.Points(geometry, new THREE.PointsMaterial({
+      color, map: new THREE.CanvasTexture(textureCanvas), size: .24, transparent: true, alphaTest: .4,
+    })));
+  }
+  for (const side of [-1, 1]) {
+    bracket([[-19, 2.9, side * 23], [-19, 2.9, side * 26], [19, 2.9, side * 26], [19, 2.9, side * 23]], '#235970');
+    bracket([[side * 12, 2, -11], [side * 14, 2, -11], [side * 14, 2, 11], [side * 12, 2, 11]], '#9ab745');
+  }
 
-  const render = () => renderer.render(scene, camera);
+  const tags = [
+    { x: -10, z: -26, text: 'Business Neighborhood' },
+    { x: 10, z: 26, text: 'Business Neighborhood' },
+    { x: -14, z: 0, text: 'Dynamic Space', dynamic: true },
+    { x: 14, z: 0, text: 'Dynamic Space', dynamic: true },
+    { x: 8, z: -5, text: 'Focus' },
+    { x: -15, z: -15.5, text: 'Meeting' },
+    { x: 15, z: 15.5, text: 'Meeting' },
+    { x: 8, z: 6, text: 'Individual Work' },
+    { x: -8, z: 1, text: 'Collaboration' },
+  ].map(({ x, z, text, dynamic }) => {
+    const label = document.createElement('span');
+    label.className = dynamic ? 'annotation dynamic' : 'annotation';
+    label.textContent = text;
+    host.append(label);
+    return { label, anchor: new THREE.Vector3(x, 3.2, z) };
+  });
+
+  const projected = new THREE.Vector3();
+  function render() {
+    renderer.render(scene, camera);
+    for (const { label, anchor } of tags) {
+      projected.copy(anchor).project(camera);
+      label.style.left = `${(projected.x + 1) * 50}%`;
+      label.style.top = `${(1 - projected.y) * 50}%`;
+    }
+  }
+
   function resize() {
     const { clientWidth: w, clientHeight: h } = host;
     if (!w || !h) return;
     const aspect = w / h;
-    const halfHeight = Math.max(10.4, 18.1 / aspect);
+    const halfHeight = Math.max(23, 34 / aspect);
     Object.assign(camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);

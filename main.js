@@ -1,32 +1,29 @@
-const width = 24;
-const depth = 20;
-const workstations = [
-  ...[-8, -4, 0, 4, 8].map((x) => ({ x, z: -7, w: 2.6, d: 1.3, hours: 4, type: 'desk' })),
-  { x: 8, z: -1.5, w: 2.6, d: 1.3, hours: 3, type: 'desk' },
-  { x: -8, z: 4, w: 3.6, d: 3.4, hours: 1, type: 'booth', label: 'Focus booth' },
-  { x: 0, z: 4, w: 5, d: 3.4, hours: 1, type: 'lounge', label: 'Informal seating' },
-  { x: 8, z: 4, w: 4, d: 2.6, hours: 2, type: 'touchdown', label: 'Touchdown desk' },
+const plates = [
+  ...[-18, 18].map(z => ({ x: 0, z, w: 42, d: 12, color: '#e6edf5' })),
+  ...[-8, 8].map(x => ({ x, z: 0, w: 8, d: 24, color: '#e5edc8' })),
+  ...[-8, 8].map(z => ({ x: 0, z, w: 8, d: 8, color: '#e5edc8' })),
 ];
-const host = document.querySelector('#model');
-
-function showPlan() {
-  const furniture = workstations.map(({ x, z, w, d, type }) =>
-    `<rect x="${x - w / 2}" y="${z - d / 2}" width="${w}" height="${d}" rx=".15" fill="${type === 'desk' ? '#fff' : '#e5d1b7'}"/>`,
-  ).join('');
-  host.innerHTML = `<svg viewBox="-13 -11 26 27" role="img" aria-label="Office floor plan, 20 meters from exterior glazing to atrium edge">
-    <g stroke="#424342" stroke-width=".07">
-      <rect x="-12" y="-10" width="24" height="20" fill="#f8f6f0"/>
-      <path d="M-12 10V16 M12 10V16 M-12 16H12" fill="none" stroke-dasharray=".2 .2"/>
-      <path d="M-12 10H12" stroke="#565c5a" stroke-width=".16"/>
-      ${furniture}
-      <path d="M-12 -10H12" stroke="#769191" stroke-width=".19"/>
-    </g>
-  </svg>`;
+const workstations = [];
+for (const side of [-1, 1]) {
+  for (const x of [-17, -11, -5, 2, 9, 16]) {
+    workstations.push({ x, z: side * 21.5, w: 3.8, d: 2, type: 'desk' });
+  }
+  for (const x of [-15, 15]) workstations.push({ x, z: side * 15.5, w: 4.8, d: 4.5, type: 'meeting' });
+  workstations.push({ x: 0, z: side * 9, w: 3.8, d: 2, type: 'meeting' });
+  workstations.push({ x: side * 8, z: -5, w: 2.2, d: 2.1, type: 'booth' });
+  workstations.push({ x: side * 8, z: 0, w: 3.8, d: 2, type: 'lounge' });
+  workstations.push({ x: side * 8, z: 6, w: 3.8, d: 2, type: 'touchdown' });
 }
 
+const host = document.querySelector('#model');
+function showPlan() {
+  const footprint = plates.map(({ x, z, w, d, color }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="${color}"/>`).join('');
+  const furniture = workstations.map(({ x, z, w }) => `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#faf9f5"/>`).join('');
+  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#92949e" stroke-width=".065">${footprint}${furniture}</g></svg>`;
+}
 try {
-  const { createOffice } = await import('./office.js?v=atrium');
-  const canvas = createOffice(host, { width, depth, workstations });
+  const { createOffice } = await import('./office.js?v=neighborhoods');
+  const canvas = createOffice(host, { plates, workstations });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
   showPlan();
