@@ -28,6 +28,9 @@ for (const side of [-1, 1]) {
   for (const z of [-6.2, 6.8]) {
     workstations.push({ x: side * 8, z, w: 3.5, d: 1.4, type: 'dynamic' });
   }
+  for (const z of [-10.1, 10.25]) {
+    workstations.push({ x: side * 8, z, w: 1.55, d: .75, type: 'individual' });
+  }
   for (const z of [-3.65, 4.15]) {
     workstations.push({ x: side * 8.65, z, w: 4.4, d: .55, type: 'planter' });
   }
@@ -67,6 +70,23 @@ const daylightClouds = [-deskBandCenter, deskBandCenter].map(z => [
   ...cloudCap.slice(1, -1).map(([x, depth]) => [-x, -depth]),
 ].map(([x, offset]) => [x, z + offset]));
 
+const topicTitle = document.querySelector('#topic-title');
+const topicDescription = document.querySelector('#topic-description');
+const topics = [
+  { title: topicTitle.textContent, description: topicDescription.innerHTML },
+  { title: 'Dynamic Workstations', description: 'Choose a setting that fits the task. Powered shared tables support short work sessions, individual desks offer a quieter option, and collaboration hubs provide space to work together.' },
+  { title: 'Adaptive Climate', description: 'Match cooling control to how long people stay. Workstations used for more than 2 hours get tighter control. Flexible settings can vary within an illustrative ±2 °C of the setpoint.' },
+];
+let currentTopic = 0;
+let officeView;
+document.querySelector('#next-topic').addEventListener('click', () => {
+  currentTopic = (currentTopic + 1) % topics.length;
+  topicTitle.textContent = topics[currentTopic].title;
+  topicDescription.innerHTML = topics[currentTopic].description;
+  if (officeView) officeView.setTopic(currentTopic);
+  else showPlan();
+});
+
 const host = document.querySelector('#model');
 function showPlan() {
   const footprint = plates.map(({ x, z, w, d }) => `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="#fafafa"/>`).join('');
@@ -79,8 +99,7 @@ function showPlan() {
         `<rect x="${x + (side - 1) * d / 2}" y="${z + (row - .5) * w}" width="${d}" height="${w}" fill="#e0d6ba"/>`,
       )).join('');
     }
-    if (type === 'meeting') {
-      if (type === 'library') {
+    if (type === 'library') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#c8b393"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#e0d6ba"/>`;
     }
     if (type === 'collaboration') {
@@ -98,16 +117,21 @@ function showPlan() {
     if (type === 'oval') {
       return `<ellipse cx="${x}" cy="${z}" rx="${w/2}" ry="${d/2}" fill="#e0d6ba"/>`;
     }
-    return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#e0d6ba"/>`;
+    if (type === 'meeting') {
+      return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-1.8}" y="${z-.65}" width="3.6" height="1.3" fill="#e0d6ba"/>`;
     }
     return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#e0d6ba"/>`;
   }).join('');
-  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${clouds}${furniture}</g><path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text></svg>`;
+  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=daylight-dimensions');
-  const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
-  canvas.addEventListener('webglcontextlost', showPlan, { once: true });
+  const { createOffice } = await import('./office.js?v=occupied-workplace');
+  officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
+  officeView.setTopic(currentTopic);
+  officeView.canvas.addEventListener('webglcontextlost', () => {
+    officeView = undefined;
+    showPlan();
+  }, { once: true });
 } catch {
   showPlan();
 }

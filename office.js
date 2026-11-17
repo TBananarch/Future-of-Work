@@ -336,6 +336,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
+  const daylight = new THREE.Group();
+  scene.add(daylight);
   for (const points of daylightClouds) {
     const shape = new THREE.Shape(points.map(([x, z]) => new THREE.Vector2(x, -z)));
     const geometry = new THREE.ExtrudeGeometry(shape, {
@@ -353,7 +355,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }));
     cloud.rotation.x = -Math.PI / 2;
     cloud.position.y = .38;
-    scene.add(cloud);
+    daylight.add(cloud);
   }
 
   // Dimension the maximum setback from the window at z = 24 m.
@@ -362,10 +364,10 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   const innerZ = windowZ - 8;
   const dimensionMidpoint = (windowZ + innerZ) / 2;
   const dimensionInk = '#171717';
-  box(scene, dimensionX, .046, dimensionMidpoint, .055, .013, windowZ - innerZ, dimensionInk, {}, false);
+  box(daylight, dimensionX, .046, dimensionMidpoint, .055, .013, windowZ - innerZ, dimensionInk, {}, false);
   for (const end of [innerZ, windowZ]) {
-    box(scene, dimensionX, .045, end, 1.02, .018, .055, dimensionInk, {}, false);
-    const tick = box(scene, dimensionX, .048, end, .36, .016, .047, dimensionInk, {}, false);
+    box(daylight, dimensionX, .045, end, 1.02, .018, .055, dimensionInk, {}, false);
+    const tick = box(daylight, dimensionX, .048, end, .36, .016, .047, dimensionInk, {}, false);
     tick.rotation.y = Math.PI / 4;
   }
 
@@ -386,9 +388,124 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   dimensionLabel.position.set(dimensionX + 1.15, .12, dimensionMidpoint);
   dimensionLabel.scale.set(3.1, 1.16, 1);
   dimensionLabel.renderOrder = 5;
-  scene.add(dimensionLabel);
+  daylight.add(dimensionLabel);
+
+  const silhouette = new THREE.MeshBasicMaterial({ color: '#080808' });
+  const personMotion = [];
+  function person(x, z, yaw, pose, destination) {
+    const figure = new THREE.Group();
+    const torso = new THREE.Group();
+    const seated = pose === 'seated';
+    const hip = seated ? .48 : .89;
+    figure.position.set(x, .025, z);
+    figure.rotation.y = yaw;
+    scene.add(figure);
+    torso.position.y = hip;
+    figure.add(torso);
+
+    function oval(parent, x, y, z, w, h, d) {
+      const part = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), silhouette);
+      part.position.set(x, y, z);
+      part.scale.set(w, h, d);
+      parent.add(part);
+    }
+    function limb(parent, from, to, radius) {
+      const start = new THREE.Vector3(...from);
+      const end = new THREE.Vector3(...to);
+      const direction = end.clone().sub(start);
+      const part = new THREE.Mesh(new THREE.CylinderGeometry(radius * .72, radius, direction.length(), 8), silhouette);
+      part.position.copy(start).lerp(end, .5);
+      part.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+      parent.add(part);
+    }
+    oval(torso, 0, .235, 0, .20, .29, .117);
+    oval(torso, 0, .635, .012, .101, .127, .10);
+    limb(torso, [0, .46, 0], [0, .56, .01], .052);
+    const legs = [];
+    const arms = [];
+    for (const side of [-1, 1]) {
+      const leg = new THREE.Group();
+      leg.position.set(side * .088, hip, 0);
+      figure.add(leg);
+      const knee = seated ? [0, -.045, .29] : [0, -.39, .015];
+      const ankle = seated ? [0, -.42, .34] : [0, -.83, 0];
+      limb(leg, [0, 0, 0], knee, .07);
+      limb(leg, knee, ankle, .052);
+      oval(leg, 0, ankle[1] - .018, ankle[2] + .065, .052, .039, .113);
+      legs.push(leg);
+      const arm = new THREE.Group();
+      arm.position.set(side * .185, .385, 0);
+      torso.add(arm);
+      const elbow = seated || pose === 'counter' ? [side * .03, -.21, .095] : [side * .035, -.22, .018];
+      const hand = seated ? [side * .015, -.12, .32] :
+        pose === 'counter' ? [side * .02, -.24, .27] : [side * .04, -.44, .035];
+      limb(arm, [0, 0, 0], elbow, .051);
+      limb(arm, elbow, hand, .043);
+      oval(arm, ...hand, .031, .048, .033);
+      arms.push(arm);
+    }
+    personMotion.push({ figure, torso, legs, arms, x, z, yaw, destination, pose });
+  }
+
+  for (const { x, z, type, atriumSide } of workstations) {
+    if (type === 'desk' && (Math.abs(x) > 17 || (Math.abs(x) > 5 && Math.abs(x) < 11))) {
+      person(x + chairPlacement.offset, z, -Math.PI / 2, 'seated');
+    }
+    if (type === 'meeting' || type === 'collaboration') {
+      person(x - 1.2, z + 1, Math.PI, 'seated');
+      person(x + 1.2, z - 1, 0, 'seated');
+    }
+    if (type === 'dynamic') person(x, z + 1.04, Math.PI, 'seated');
+    if (type === 'individual') person(x, z + .94, Math.PI, 'seated');
+    if (type === 'library') person(x - 1.25, z + atriumSide * (.68 - .89), atriumSide < 0 ? Math.PI : 0, 'seated');
+    if (type === 'oval' || type === 'coffee') {
+      const offset = type === 'oval' ? .98 : .65;
+      person(x + offset, z, -Math.PI / 2, 'seated');
+    }
+    if (type === 'kitchen' || type === 'printing') person(x + 1.45, z + dForCounter(type), Math.PI, 'counter');
+  }
+
+  function dForCounter(type) {
+    return type === 'kitchen' ? 1 : 1.18;
+  }
+
+  person(-11, 18.15, Math.PI / 2, 'walk', [12, 18.15]);
+  person(12, -18.15, -Math.PI / 2, 'walk', [-12, -18.15]);
+  person(5, -3.1, 0, 'walk', [5, 3.1]);
 
   const render = () => renderer.render(scene, camera);
+  let animationFrame;
+  let lastFrame = -Infinity;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function animate(now) {
+    animationFrame = requestAnimationFrame(animate);
+    if (document.hidden || reducedMotion.matches || now - lastFrame < 42) return;
+    lastFrame = now;
+    const seconds = now / 1000;
+    for (const [index, actor] of personMotion.entries()) {
+      const phase = seconds * 1.4 + index * 1.7;
+      if (actor.destination) {
+        const [endX, endZ] = actor.destination;
+        const length = Math.hypot(endX - actor.x, endZ - actor.z);
+        const progress = (seconds * .8 / length) % 2;
+        const fraction = 1 - Math.abs(1 - progress);
+        actor.figure.position.set(actor.x + (endX - actor.x) * fraction,
+          .025 + .018 * Math.abs(Math.sin(seconds * 8)), actor.z + (endZ - actor.z) * fraction);
+        actor.figure.rotation.y = actor.yaw + (progress > 1 ? Math.PI : 0);
+        const swing = .32 * Math.sin(seconds * 8 + index);
+        actor.legs[0].rotation.x = swing;
+        actor.legs[1].rotation.x = -swing;
+        actor.arms[0].rotation.x = -swing * .75;
+        actor.arms[1].rotation.x = swing * .75;
+      } else if (index % 3 === 0 || actor.pose === 'counter') {
+        actor.torso.rotation.y = .06 * Math.sin(phase);
+        actor.arms[1].rotation.x = .055 * Math.sin(phase * 1.7);
+      }
+    }
+    render();
+  }
+
 
   function resize() {
     const { clientWidth: w, clientHeight: h } = host;
@@ -407,7 +524,15 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   canvas.addEventListener('webglcontextlost', () => {
     observer.disconnect();
     controls.dispose();
+    cancelAnimationFrame(animationFrame);
   }, { once: true });
   resize();
-  return canvas;
+  animationFrame = requestAnimationFrame(animate);
+  return {
+    canvas,
+    setTopic(index) {
+      daylight.visible = index === 0;
+      render();
+    },
+  };
 }
