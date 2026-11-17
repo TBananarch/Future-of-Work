@@ -424,9 +424,9 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       box(climate, x + side * .075, 2.66, z, .021, .013, 3.5, '#4c7487', {}, false);
     }
   }
-  function climateTube(points, radius, color) {
+  function climateTube(points, radius, color, opacity = 1) {
     const path = new THREE.CatmullRomCurve3(points);
-    const material = new THREE.MeshBasicMaterial({ color });
+    const material = new THREE.MeshBasicMaterial({ color, opacity, transparent: opacity < 1, depthWrite: opacity === 1 });
     climate.add(new THREE.Mesh(new THREE.TubeGeometry(path, points.length * 7, radius, 6, false), material));
     return { path, material };
   }
@@ -445,17 +445,29 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   }
   for (const side of [-1, 1]) {
     for (const wing of [-1, 1]) {
-      const points = [[side * 4.15, 1.8, wing * 2], [side * 8.9, 2.03, wing * 3.1],
-        [side * 11.1, 2.13, wing * 5.5], [side * 11.15, 2.2, wing * 12.1],
-        [side * 10.65, 2.24, wing * 18.5], [side * 10.55, 2.24, wing * 20.2]]
-        .map(([x, y, z]) => new THREE.Vector3(x, y, z));
-      const { path, material } = climateTube(points, .064, '#176999');
-      for (const position of [.30, .97]) {
-        const head = new THREE.Mesh(new THREE.ConeGeometry(.24, .6, 14), material);
-        head.position.copy(path.getPointAt(position));
-        head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(position));
-        climate.add(head);
+      const points = [[side * 4.15, 1.55, wing * 2], [side * 7.2, 1.85, wing * 2.45],
+        [side * 10.2, 2.2, wing * 3.65], [side * 11.35, 2.38, wing * 6.7],
+        [side * 11.2, 2.18, wing * 11.6], [side * 10.85, 2.32, wing * 16.6],
+        [side * 10.45, 2.55, wing * 20.35]].map(([x, y, z]) => new THREE.Vector3(x, y, z));
+      const { path, material } = climateTube(points, .079, '#197caf', .76);
+      // Offset the companion lines perpendicular to the flow so they fan out at the turn.
+      for (const strand of [-1, 1]) {
+        const stream = Array.from({ length: 20 }, (_, index) => {
+          const t = index / 19;
+          const point = path.getPointAt(t);
+          const tangent = path.getTangentAt(t);
+          const spread = strand * (.16 + .41 * Math.sin(Math.PI * t));
+          point.x += tangent.z * spread;
+          point.z -= tangent.x * spread;
+          point.y += .12 * Math.sin(2 * Math.PI * t + strand);
+          return point;
+        });
+        climateTube(stream, .047, '#58b6de', .52);
       }
+      const head = new THREE.Mesh(new THREE.ConeGeometry(.21, .68, 18), material);
+      head.position.copy(path.getPointAt(.982));
+      head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(.982));
+      climate.add(head);
     }
   }
 
