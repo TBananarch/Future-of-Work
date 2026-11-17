@@ -655,8 +655,41 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
+  const climateLabels = document.createElement('div');
+  climateLabels.hidden = true;
+  climateLabels.setAttribute('role', 'group');
+  climateLabels.setAttribute('aria-label', 'Climate system callouts');
+  Object.assign(climateLabels.style, { position: 'absolute', inset: 0, pointerEvents: 'none' });
+  host.append(climateLabels);
+  const climateCallouts = [
+    { name: 'Chilled beams', anchor: new THREE.Vector3(-10.075, 2.66, -21.3), side: 'right' },
+    { name: 'Radiant floor', anchor: new THREE.Vector3(14, .052, 22.1), side: 'left' },
+  ].map(({ name, anchor, side }) => {
+    const label = document.createElement('div');
+    Object.assign(label.style, { position: 'absolute', display: 'flex', alignItems: 'center', gap: '5px',
+      transform: side === 'left' ? 'translate(-100%, -50%)' : 'translateY(-50%)',
+      flexDirection: side === 'left' ? 'row-reverse' : 'row' });
+    const leader = document.createElement('span');
+    Object.assign(leader.style, { width: 'clamp(16px, 6vw, 88px)', height: '1px', background: '#171717' });
+    const caption = document.createElement('span');
+    caption.textContent = name;
+    Object.assign(caption.style, { background: '#fff', padding: '3px 5px', whiteSpace: 'nowrap',
+      color: '#171717', font: '600 clamp(10px, 1.1vw, 15px) Arial, sans-serif' });
+    label.append(leader, caption);
+    climateLabels.append(label);
+    return { label, anchor };
+  });
+
   function render() {
     renderer.render(scene, camera);
+    if (climate.visible) {
+      for (const { label, anchor } of climateCallouts) {
+        projectedThought.copy(anchor).project(camera);
+        label.style.left = ((projectedThought.x + 1) * 50) + '%';
+        label.style.top = ((1 - projectedThought.y) * 50) + '%';
+        label.style.visibility = Math.abs(projectedThought.x) > 1 || Math.abs(projectedThought.y) > 1 ? 'hidden' : 'visible';
+      }
+    }
     if (!thoughts.hidden) placeThoughts();
   }
   let animationFrame;
@@ -719,6 +752,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       daylight.visible = index === 0;
       thoughts.hidden = index !== 1;
       climate.visible = index === 2;
+      climateLabels.hidden = index !== 2;
       render();
     },
   };
