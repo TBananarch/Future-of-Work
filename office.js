@@ -1,20 +1,19 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { width, depth, daylightDepth, workstations, daylight }) {
+export function createOffice(host, { width, depth, workstations }) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#e9ece3');
+  scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = false;
   const canvas = renderer.domElement;
   canvas.setAttribute('role', 'img');
   canvas.setAttribute('aria-label', 'Interactive cutaway of the concept office');
   host.append(canvas);
 
   const camera = new THREE.OrthographicCamera(-17, 17, 12, -12, .1, 140);
-  camera.position.set(24, 23, 31);
+  camera.position.set(28, 27, 28);
   const controls = new OrbitControls(camera, canvas);
   controls.target.set(0, .4, 0);
   controls.enablePan = false;
@@ -23,33 +22,26 @@ export function createOffice(host, { width, depth, daylightDepth, workstations, 
   controls.maxZoom = 2.4;
   controls.update();
 
-  scene.add(new THREE.HemisphereLight('#ffffff', '#686e61', 2.2));
-  const sunlight = new THREE.DirectionalLight('#fff1db', 2.5);
-  sunlight.position.set(-12, 25, 9);
-  sunlight.castShadow = true;
-  Object.assign(sunlight.shadow.camera, { left: -19, right: 19, top: 19, bottom: -19 });
-  sunlight.shadow.mapSize.set(2048, 2048);
-  sunlight.shadow.normalBias = .03;
-  scene.add(sunlight);
-
-  function box(parent, x, y, z, w, h, d, color, options = {}) {
+  const outline = new THREE.LineBasicMaterial({ color: '#353735', transparent: true, opacity: .68 });
+  function box(parent, x, y, z, w, h, d, color, options = {}, edged = true) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshStandardMaterial({ color, ...options }),
+      new THREE.MeshBasicMaterial({ color, ...options }),
     );
     mesh.position.set(x, y, z);
-    mesh.castShadow = !options.transparent;
-    mesh.receiveShadow = true;
+    if (edged && !options.transparent) {
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), outline));
+    }
     parent.add(mesh);
     return mesh;
   }
 
-  const wall = '#d9ded3';
-  const timber = '#a77950';
-  const frame = '#374f46';
+  const wall = '#fafaf8';
+  const timber = '#e2bd94';
+  const frame = '#5b605d';
   const glazing = -depth / 2;
-  box(scene, 0, -.22, 0, width, .44, depth, '#d0c8b3');
-  box(scene, 0, -.01, 0, width - .12, .04, depth - .12, '#f4ecdb');
+  box(scene, 0, -.22, 0, width, .44, depth, '#e5e1d9');
+  box(scene, 0, -.01, 0, width - .12, .04, depth - .12, '#faf8f3');
   box(scene, -width / 2, 1.35, -3.5, .18, 2.7, 9, wall);
   box(scene, 0, .13, glazing, width, .26, .18, frame);
   box(scene, 0, 2.7, glazing, width, .12, .15, frame);
@@ -66,21 +58,21 @@ export function createOffice(host, { width, depth, daylightDepth, workstations, 
   }
 
   function chair(x, z, facing) {
-    box(scene, x, .42, z, .57, .11, .55, '#648176');
-    box(scene, x, .66, z + facing * .23, .57, .43, .09, '#648176');
+    box(scene, x, .42, z, .57, .11, .55, '#e9ece7');
+    box(scene, x, .66, z + facing * .23, .57, .43, .09, '#e9ece7');
     box(scene, x, .2, z, .12, .4, .12, frame);
   }
 
   for (const { x, z, w, d, type } of workstations) {
     if (type === 'lounge') {
-      box(scene, x, .28, z + .65, w * .8, .53, .9, '#8d9b7a');
-      box(scene, x, .6, z + 1, w * .8, .52, .2, '#8d9b7a');
+      box(scene, x, .28, z + .65, w * .8, .53, .9, '#a8b2a2');
+      box(scene, x, .6, z + 1, w * .8, .52, .2, '#a8b2a2');
       box(scene, x, .32, z - .55, 1.8, .64, .75, timber);
       continue;
     }
     if (type === 'booth') {
-      box(scene, x, 1.15, z + d / 2, w, 2.3, .16, '#7c8d7a');
-      box(scene, x - w / 2, 1.15, z, .16, 2.3, d, '#7c8d7a');
+      box(scene, x, 1.15, z + d / 2, w, 2.3, .16, '#c9bab1');
+      box(scene, x - w / 2, 1.15, z, .16, 2.3, d, '#c9bab1');
     }
     table(x, z, type === 'booth' ? 1.8 : w, .85);
     chair(x, z + (type === 'booth' ? -.8 : .85), type === 'booth' ? -1 : 1);
@@ -91,24 +83,37 @@ export function createOffice(host, { width, depth, daylightDepth, workstations, 
     if (type === 'touchdown') chair(x + 1.25, z + .85, 1);
   }
 
-  const overlays = new THREE.Group();
-  scene.add(overlays);
-  let markers = [];
+  // Warm floorboards ground the flexible work settings in the cutaway.
+  for (let row = 0; row < 11; row++) {
+    const z = 2.1 + row * .48;
+    box(scene, 0, .015, z, 22.6, .024, .465, row % 3 === 0 ? '#ead0af' : '#e7c6a1', {}, false);
+  }
 
-  function render() {
-    renderer.render(scene, camera);
-    for (const { element, point } of markers) {
-      const { x, y } = point.clone().project(camera);
-      element.style.left = `${(x + 1) * 50}%`;
-      element.style.top = `${(1 - y) * 50}%`;
+  function plant(x, z) {
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(.29, .22, .42, 10), new THREE.MeshBasicMaterial({ color: '#e1dfd5' }));
+    pot.position.set(x, .22, z);
+    pot.add(new THREE.LineSegments(new THREE.EdgesGeometry(pot.geometry, 38), outline));
+    scene.add(pot);
+    for (let i = 0; i < 8; i++) {
+      const angle = i * Math.PI * .76;
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 5), new THREE.MeshBasicMaterial({
+        color: ['#536f54', '#748c60', '#a2ad7d'][i % 3],
+      }));
+      leaf.scale.set(.13, .39, .07);
+      leaf.position.set(x + Math.cos(angle) * .22, .66 + (i % 3) * .12, z + Math.sin(angle) * .22);
+      leaf.rotation.set(.55 * Math.sin(angle), -angle, -.55 * Math.cos(angle));
+      scene.add(leaf);
     }
   }
 
+  for (const [x, z] of [[-10.9, 6.2], [-4.1, 5.8], [3.6, 5.9], [10.7, -6.7], [-10.8, -6.6]]) plant(x, z);
+
+  const render = () => renderer.render(scene, camera);
   function resize() {
     const { clientWidth: w, clientHeight: h } = host;
     if (!w || !h) return;
     const aspect = w / h;
-    const halfHeight = Math.max(11.5, 16 / aspect);
+    const halfHeight = Math.max(8.15, 14.6 / aspect);
     Object.assign(camera, { left: -halfHeight * aspect, right: halfHeight * aspect, top: halfHeight, bottom: -halfHeight });
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
@@ -122,33 +127,6 @@ export function createOffice(host, { width, depth, daylightDepth, workstations, 
     observer.disconnect();
     controls.dispose();
   }, { once: true });
-
-  return {
-    resize,
-    show(topic) {
-      for (const mesh of [...overlays.children]) {
-        mesh.removeFromParent();
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-      }
-      for (const { element } of markers) element.remove();
-      for (const { x, z, w, d, color } of topic.zones) {
-        box(overlays, x, .027, z, w, .018, d, color, { transparent: true, opacity: .7, depthWrite: false });
-      }
-      if (topic === daylight) {
-        const x = -10.5;
-        box(overlays, x, .06, glazing + daylightDepth / 2, .055, .04, daylightDepth, frame);
-        for (const z of [glazing, glazing + daylightDepth]) box(overlays, x, .06, z, .65, .04, .06, frame);
-      }
-      markers = topic.labels.map(({ x, z, text }) => {
-        const element = document.createElement('span');
-        element.className = 'marker';
-        element.setAttribute('aria-hidden', 'true');
-        element.textContent = text;
-        host.append(element);
-        return { element, point: new THREE.Vector3(x, topic === daylight ? .3 : 2.65, z) };
-      });
-      render();
-    },
-  };
+  resize();
+  return canvas;
 }
