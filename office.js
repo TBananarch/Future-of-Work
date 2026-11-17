@@ -122,7 +122,40 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     }
   }
 
+  function roundTable(x, z, radius, height, color) {
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, .08, 32),
+      new THREE.MeshBasicMaterial({ color }));
+    top.position.set(x, height, z);
+    scene.add(top);
+    furnitureLeg(scene, x, z, height - .04, .065, 0, 0);
+  }
+
   for (const { x, z, w, d, type, atriumSide } of workstations) {
+    if (type === 'round-collab') {
+      roundTable(x, z, .68, .55, '#bb8e47');
+      for (const [index, angle] of [0, 2.1, 4.2].entries()) {
+        const seat = new THREE.Group();
+        seat.position.set(x + Math.sin(angle) * 1.12, 0, z + Math.cos(angle) * 1.12);
+        seat.rotation.y = angle;
+        scene.add(seat);
+        chair(0, 0, 1, seat, ['#aa7474', '#398298', '#79833e'][index]);
+      }
+      roundTable(x + .82, z + 1.1, .25, .43, '#c3a553');
+      continue;
+    }
+    if (type === 'phone') {
+      for (const offset of [-.92, .92]) {
+        const boothZ = z + offset;
+        const back = x + .67;
+        box(scene, back, 1.15, boothZ, .08, 2.3, 1.53, '#a4a572');
+        for (const end of [-.76, .76]) box(scene, x, 1.15, boothZ + end, 1.34, 2.3, .05, '#b4c9d4', glass);
+        box(scene, x, 2.29, boothZ, 1.4, .09, 1.58, '#87916a');
+        furnitureSurface(scene, x + .36, .91, boothZ, .43, .07, 1, '#d8c5a0');
+        box(scene, x - .65, 1.12, boothZ + .75, .05, 2.25, .055, frame, {}, false);
+      }
+      continue;
+    }
+
     if (type === 'desk') {
       const cluster = new THREE.Group();
       cluster.position.set(x, 0, z);
@@ -137,7 +170,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
-    if (type === 'meeting' || type === 'library') {
+    if (type === 'meeting' || type === 'library' || type === 'huddle') {
       const front = z + atriumSide * d / 2;
       const rear = z - atriumSide * d / 2;
       const roomHeight = 2.65;
@@ -196,6 +229,12 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
         const readingZ = z + atriumSide * .68;
         table(x, readingZ, 3.8, 1, scene, '#c6a36d');
         for (const offset of [-1.25, 0, 1.25]) chair(x + offset, readingZ - atriumSide * .89, -atriumSide);
+        continue;
+      }
+      if (type === 'huddle') {
+        roundTable(x, z, .57, .76, '#d8c5a0');
+        chair(x, z + .94, 1);
+        chair(x, z - .94, -1);
         continue;
       }
       table(x, z, 3.6, 1.3, scene, '#d8c5a0');
@@ -377,6 +416,49 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     climate.add(floorGradient);
   }
 
+  // Chilled beams follow desk clusters. Hydronic loops are drawn at the floor surface.
+  for (const { x, z, type } of workstations) {
+    if (type !== 'desk') continue;
+    box(climate, x, 2.57, z, .25, .17, 3.65, '#d6e5ea');
+    for (const side of [-1, 1]) {
+      box(climate, x + side * .075, 2.66, z, .021, .013, 3.5, '#4c7487', {}, false);
+    }
+  }
+  function climateTube(points, radius, color) {
+    const path = new THREE.CatmullRomCurve3(points);
+    const material = new THREE.MeshBasicMaterial({ color });
+    climate.add(new THREE.Mesh(new THREE.TubeGeometry(path, points.length * 7, radius, 6, false), material));
+    return { path, material };
+  }
+  for (const side of [-1, 1]) {
+    for (const center of [-14, 0, 14]) {
+      const points = [];
+      for (let run = 0; run < 5; run++) {
+        const z = side * (19.25 + run * .95);
+        const turn = run % 2 === 0 ? 1 : -1;
+        points.push(new THREE.Vector3(center - turn * 5.1, .041, z),
+          new THREE.Vector3(center, .041, z), new THREE.Vector3(center + turn * 5.1, .041, z));
+        if (run < 4) points.push(new THREE.Vector3(center + turn * 5.38, .041, z + side * .475));
+      }
+      climateTube(points, .023, '#386880');
+    }
+  }
+  for (const side of [-1, 1]) {
+    for (const wing of [-1, 1]) {
+      const points = [[side * 4.15, 1.8, wing * 2], [side * 8.9, 2.03, wing * 3.1],
+        [side * 11.1, 2.13, wing * 5.5], [side * 11.15, 2.2, wing * 12.1],
+        [side * 10.65, 2.24, wing * 18.5], [side * 10.55, 2.24, wing * 20.2]]
+        .map(([x, y, z]) => new THREE.Vector3(x, y, z));
+      const { path, material } = climateTube(points, .064, '#176999');
+      for (const position of [.30, .97]) {
+        const head = new THREE.Mesh(new THREE.ConeGeometry(.24, .6, 14), material);
+        head.position.copy(path.getPointAt(position));
+        head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(position));
+        climate.add(head);
+      }
+    }
+  }
+
   const daylight = new THREE.Group();
   scene.add(daylight);
   for (const points of daylightClouds) {
@@ -496,6 +578,9 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       person(x - 1.2, z + 1, Math.PI, 'seated');
       person(x + 1.2, z - 1, 0, 'seated');
     }
+    if (type === 'round-collab') person(x, z + 1.12, Math.PI, 'seated');
+    if (type === 'huddle') person(x, z - .94, 0, 'seated');
+    if (type === 'phone') person(x - .15, z + .92, Math.PI / 2, 'counter');
     if (type === 'dynamic') person(x, z + 1.04, Math.PI, 'seated');
     if (type === 'library') person(x - 1.25, z + atriumSide * (.68 - .89), atriumSide < 0 ? Math.PI : 0, 'seated');
     if (type === 'oval' || type === 'coffee') {
@@ -525,6 +610,8 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     ['Individual desks', 'I’m here today. I need a desk before my meeting.', -8, -9.06, '#d1d49d'],
     ['Touchdown desks', 'I need ten minutes to catch up.', 9.78, 15.2, '#dbdda9'],
     ['Collaboration hubs', 'Let’s sketch this out together.', 9.2, -1, '#e9cba2'],
+    ['Coffee', 'I’m grabbing a coffee between meetings.', 1.45, -8.65, '#d9dfbc'],
+    ['Printing center', 'I need to print and bind this.', 1.45, 9.38, '#e6c6c2'],
     ['Meeting rooms', 'We need a private conversation.', 13.8, 15.95, '#e8d8b6', true],
   ].map(([setting, words, x, z, color, below = false]) => {
     const bubble = document.createElement('div');

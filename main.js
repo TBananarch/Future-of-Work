@@ -19,7 +19,14 @@ const meetingCenter = deskBandInnerEdge - circulationWidth - (meetingDepth + mee
 const workstations = [];
 for (const side of [-1, 1]) {
   for (let cluster = 0; cluster < clusterCount; cluster++) {
-    workstations.push({ x: (cluster - (clusterCount - 1) / 2) * clusterPitch, z: side * deskBandCenter, w: deskWidth, d: .75, type: 'desk' });
+    const x = (cluster - (clusterCount - 1) / 2) * clusterPitch;
+    const z = side * deskBandCenter;
+    if (cluster === 3 || cluster === 7) {
+      const type = cluster === 3 ? 'round-collab' : side < 0 ? 'huddle' : 'phone';
+      workstations.push({ x, z, w: 2.8, d: 3.65, type, atriumSide: -side });
+      continue;
+    }
+    workstations.push({ x, z, w: deskWidth, d: .75, type: 'desk' });
   }
   for (const [x, roomWidth] of [[-15, 6.2], [0, 5.4], [15, 6.2]]) {
     workstations.push({ x, z: side * meetingCenter, w: roomWidth, d: meetingDepth, type: 'meeting', atriumSide: -side });
@@ -49,7 +56,7 @@ workstations.push(
 workstations.push(
   { x: 0, z: -9.65, w: 5.8, d: .85, type: 'kitchen' },
   { x: 0, z: 8.2, w: 5.3, d: 1.25, type: 'printing' },
-  ...[-2.6, 0, 2.6].map(x => ({ x, z: -5.55, w: 1.9, d: .8, type: 'coffee' })),
+  ...[-2.88, -.96, .96, 2.88].map(x => ({ x, z: -5.55, w: 1.9, d: .8, type: 'coffee' })),
 );
 
 // Rounded, softly scalloped bands follow the two rows of window seating.
@@ -75,7 +82,7 @@ const topicDescription = document.querySelector('#topic-description');
 const topics = [
   { title: topicTitle.textContent, description: topicDescription.innerHTML },
   { title: 'Dynamic Workstations', description: 'Everyone has different workstyle needs. Hybrid schedules mean headcounts fluctuate, so a mix of settings helps people find a place that suits the task and the day.' },
-  { title: 'Adaptive Climate', description: 'Cooling is most tightly controlled at the window desks, where people stay longer. Conditioning eases toward the atrium, where flexible spaces can vary by an illustrative ±2 °C around the setpoint. <br><strong style="color:#236588">Blue · tighter control</strong><br><strong style="color:#895019">Ochre · lighter conditioning</strong>' },
+  { title: 'Adaptive Climate', description: 'Chilled beams above the window desks and radiant loops in the floor provide tighter cooling control. The center is heated and cooled by air. Arrows show air moving from the atrium to the floor edges, then turning toward the windows. Flexible settings can vary by an illustrative ±2 °C. <br><strong style="color:#236588">Blue · tighter control</strong><br><strong style="color:#895019">Light orange · lighter conditioning</strong>' },
 ];
 let currentTopic = 0;
 let officeView;
@@ -99,6 +106,8 @@ function showPlan() {
         `<rect x="${x + (side - 1) * d / 2}" y="${z + (row - .5) * w}" width="${d}" height="${w}" fill="#e0d6ba"/>`,
       )).join('');
     }
+    if (type === 'round-collab') return `<circle cx="${x}" cy="${z}" r=".65" fill="#bb8e47"/>`;
+    if (type === 'huddle' || type === 'phone') return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/>`;
     if (type === 'library') {
       return `<rect x="${x-w/2}" y="${z-d/2}" width="${w}" height="${d}" fill="none"/><rect x="${x-w/2+.35}" y="${z+d/2-.48}" width="${w-.7}" height=".35" fill="#c8b393"/><rect x="${x-1.9}" y="${z-.55}" width="3.8" height="1" fill="#e0d6ba"/>`;
     }
@@ -125,7 +134,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><defs><linearGradient id="climate-floor" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="-24" y2="24"><stop offset="0" stop-color="#8abbd5"/><stop offset=".5" stop-color="#edc390"/><stop offset="1" stop-color="#8abbd5"/></linearGradient></defs><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=slim-glazing');
+  const { createOffice } = await import('./office.js?v=climate-and-social');
   officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   officeView.setTopic(currentTopic);
   officeView.canvas.addEventListener('webglcontextlost', () => {
