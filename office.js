@@ -443,31 +443,52 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       climateTube(points, .023, '#386880');
     }
   }
+  const airMotion = [];
+  function airStream(points) {
+    const { path, material } = climateTube(points, .079, '#197caf', .76);
+    // Offset the companion lines perpendicular to the flow so they fan out at the turn.
+    for (const strand of [-1, 1]) {
+      const stream = Array.from({ length: 20 }, (_, index) => {
+        const t = index / 19;
+        const point = path.getPointAt(t);
+        const tangent = path.getTangentAt(t);
+        const spread = strand * (.16 + .41 * Math.sin(Math.PI * t));
+        point.x += tangent.z * spread;
+        point.z -= tangent.x * spread;
+        point.y += .12 * Math.sin(2 * Math.PI * t + strand);
+        return point;
+      });
+      climateTube(stream, .047, '#58b6de', .52);
+    }
+    const head = new THREE.Mesh(new THREE.ConeGeometry(.21, .68, 18), material);
+    head.position.copy(path.getPointAt(.982));
+    head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(.982));
+    climate.add(head);
+    const mistGeometry = new THREE.SphereGeometry(1, 10, 8);
+    for (const phase of [.18, .51, .84]) {
+      const mist = new THREE.Mesh(mistGeometry, new THREE.MeshBasicMaterial({
+        color: '#bceeff', opacity: .7, transparent: true, depthWrite: false,
+      }));
+      mist.scale.set(.072, .43, .072);
+      mist.position.copy(path.getPointAt(phase));
+      mist.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(phase));
+      climate.add(mist);
+      airMotion.push({ path, mist, phase });
+    }
+  }
+
   for (const side of [-1, 1]) {
     for (const wing of [-1, 1]) {
       const points = [[side * 4.15, 1.55, wing * 2], [side * 7.2, 1.85, wing * 2.45],
         [side * 10.2, 2.2, wing * 3.65], [side * 11.35, 2.38, wing * 6.7],
         [side * 11.2, 2.18, wing * 11.6], [side * 10.85, 2.32, wing * 16.6],
         [side * 10.45, 2.55, wing * 20.35]].map(([x, y, z]) => new THREE.Vector3(x, y, z));
-      const { path, material } = climateTube(points, .079, '#197caf', .76);
-      // Offset the companion lines perpendicular to the flow so they fan out at the turn.
-      for (const strand of [-1, 1]) {
-        const stream = Array.from({ length: 20 }, (_, index) => {
-          const t = index / 19;
-          const point = path.getPointAt(t);
-          const tangent = path.getTangentAt(t);
-          const spread = strand * (.16 + .41 * Math.sin(Math.PI * t));
-          point.x += tangent.z * spread;
-          point.z -= tangent.x * spread;
-          point.y += .12 * Math.sin(2 * Math.PI * t + strand);
-          return point;
-        });
-        climateTube(stream, .047, '#58b6de', .52);
-      }
-      const head = new THREE.Mesh(new THREE.ConeGeometry(.21, .68, 18), material);
-      head.position.copy(path.getPointAt(.982));
-      head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), path.getTangentAt(.982));
-      climate.add(head);
+      airStream(points);
+      const atriumBranch = [[side * 15.8, 1.73, wing * 7.6], [side * 14.55, 1.92, wing * 10],
+        [side * 13.25, 2.18, wing * 12.6], [side * 13.4, 2.7, wing * 16.5],
+        [side * 15, 2.85, wing * 19.6], [side * 16.1, 2.5, wing * 22.4]]
+        .map(([x, y, z]) => new THREE.Vector3(x, y, z));
+      airStream(atriumBranch);
     }
   }
 
@@ -708,11 +729,20 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
   let lastFrame = -Infinity;
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  const vertical = new THREE.Vector3(0, 1, 0);
   function animate(now) {
     animationFrame = requestAnimationFrame(animate);
     if (document.hidden || reducedMotion.matches || now - lastFrame < 42) return;
     lastFrame = now;
     const seconds = now / 1000;
+    if (climate.visible) {
+      for (const { mist, path, phase } of airMotion) {
+        const t = (phase + seconds * .075) % 1;
+        mist.position.copy(path.getPointAt(t));
+        mist.quaternion.setFromUnitVectors(vertical, path.getTangentAt(t));
+        mist.material.opacity = .72 * Math.sin(Math.PI * t);
+      }
+    }
     for (const [index, actor] of personMotion.entries()) {
       const phase = seconds * 1.4 + index * 1.7;
       if (actor.destination) {

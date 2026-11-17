@@ -82,7 +82,7 @@ const topicDescription = document.querySelector('#topic-description');
 const topics = [
   { title: topicTitle.textContent, description: topicDescription.innerHTML },
   { title: 'Dynamic Workstations', description: 'Everyone has different workstyle needs. Hybrid schedules mean headcounts fluctuate, so a mix of settings helps people find a place that suits the task and the day.' },
-  { title: 'Adaptive Climate', description: 'Chilled beams above the window desks and radiant loops in the floor provide tighter cooling control. The center is heated and cooled by air. Arrows show air moving from the atrium to the floor edges, then turning toward the windows. Flexible settings can vary by an illustrative ±2 °C. <br><strong style="color:#236588">Blue · tighter control</strong><br><strong style="color:#895019">Light orange · lighter conditioning</strong>' },
+  { title: 'Adaptive Climate', description: 'Chilled beams above the window desks and radiant loops in the floor provide tighter cooling control. The center is heated and cooled by air. Air flows from the central and larger atriums, then turns toward the windows. Flexible settings can vary by an illustrative ±2 °C. <br><strong style="color:#236588">Blue · tighter control</strong><br><strong style="color:#895019">Light orange · lighter conditioning</strong>' },
 ];
 let currentTopic = 0;
 let officeView;
@@ -134,7 +134,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><defs><linearGradient id="climate-floor" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="-24" y2="24"><stop offset="0" stop-color="#8abbd5"/><stop offset=".5" stop-color="#edc390"/><stop offset="1" stop-color="#8abbd5"/></linearGradient></defs><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=air-streams');
+  const { createOffice } = await import('./office.js?v=atrium-flow');
   officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   officeView.setTopic(currentTopic);
   officeView.canvas.addEventListener('webglcontextlost', () => {
