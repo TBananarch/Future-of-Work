@@ -547,12 +547,12 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       if (actor.destination) {
         const [endX, endZ] = actor.destination;
         const length = Math.hypot(endX - actor.x, endZ - actor.z);
-        const progress = (seconds * .8 / length) % 2;
+        const progress = (seconds * .45 / length) % 2;
         const fraction = 1 - Math.abs(1 - progress);
         actor.figure.position.set(actor.x + (endX - actor.x) * fraction,
-          .025 + .018 * Math.abs(Math.sin(seconds * 8)), actor.z + (endZ - actor.z) * fraction);
+          .025 + .009 * Math.abs(Math.sin(seconds * 5)), actor.z + (endZ - actor.z) * fraction);
         actor.figure.rotation.y = actor.yaw + (progress > 1 ? Math.PI : 0);
-        const swing = .32 * Math.sin(seconds * 8 + index);
+        const swing = .23 * Math.sin(seconds * 5 + index);
         actor.legs[0].rotation.x = swing;
         actor.legs[1].rotation.x = -swing;
         actor.arms[0].rotation.x = -swing * .75;

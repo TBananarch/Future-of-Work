@@ -125,7 +125,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=workstyle-colors');
+  const { createOffice } = await import('./office.js?v=slower-walkers');
   officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   officeView.setTopic(currentTopic);
   officeView.canvas.addEventListener('webglcontextlost', () => {
