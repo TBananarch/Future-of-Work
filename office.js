@@ -356,6 +356,38 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     scene.add(cloud);
   }
 
+  // Dimension the maximum setback from the window at z = 24 m.
+  const dimensionX = 20.52;
+  const windowZ = 24;
+  const innerZ = windowZ - 8;
+  const dimensionMidpoint = (windowZ + innerZ) / 2;
+  const dimensionInk = '#171717';
+  box(scene, dimensionX, .046, dimensionMidpoint, .055, .013, windowZ - innerZ, dimensionInk, {}, false);
+  for (const end of [innerZ, windowZ]) {
+    box(scene, dimensionX, .045, end, 1.02, .018, .055, dimensionInk, {}, false);
+    const tick = box(scene, dimensionX, .048, end, .36, .016, .047, dimensionInk, {}, false);
+    tick.rotation.y = Math.PI / 4;
+  }
+
+  const dimensionCanvas = document.createElement('canvas');
+  dimensionCanvas.width = 384;
+  dimensionCanvas.height = 144;
+  const context = dimensionCanvas.getContext('2d');
+  context.fillStyle = '#fff';
+  context.fillRect(8, 22, 368, 100);
+  context.fillStyle = dimensionInk;
+  context.font = 'bold 76px Arial';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText('≤ 8 m', 192, 74);
+  const dimensionTexture = new THREE.CanvasTexture(dimensionCanvas);
+  dimensionTexture.colorSpace = THREE.SRGBColorSpace;
+  const dimensionLabel = new THREE.Sprite(new THREE.SpriteMaterial({ map: dimensionTexture, depthTest: false, depthWrite: false }));
+  dimensionLabel.position.set(dimensionX + 1.15, .12, dimensionMidpoint);
+  dimensionLabel.scale.set(3.1, 1.16, 1);
+  dimensionLabel.renderOrder = 5;
+  scene.add(dimensionLabel);
+
   const render = () => renderer.render(scene, camera);
 
   function resize() {

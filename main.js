@@ -102,10 +102,10 @@ function showPlan() {
     }
     return `<rect x="${x-w/2}" y="${z-.45}" width="${w}" height=".9" fill="#e0d6ba"/>`;
   }).join('');
-  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${clouds}${furniture}</g></svg>`;
+  host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${clouds}${furniture}</g><path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text></svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=daylight-contrast');
+  const { createOffice } = await import('./office.js?v=daylight-dimensions');
   const canvas = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   canvas.addEventListener('webglcontextlost', showPlan, { once: true });
 } catch {
