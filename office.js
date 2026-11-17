@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-export function createOffice(host, { plates, workstations, chairPlacement, deskRows }) {
+export function createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness }) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#ffffff');
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -90,7 +90,7 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
     box(parent, x, .2, z, .12, .4, .12, frame);
   }
 
-  for (const { x, z, w, d, type } of workstations) {
+  for (const { x, z, w, d, type, atriumSide } of workstations) {
     if (type === 'desk') {
       const cluster = new THREE.Group();
       cluster.position.set(x, 0, z);
@@ -105,7 +105,31 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       }
       continue;
     }
-    if (type === 'meeting' || type === 'booth') {
+    if (type === 'meeting') {
+      const front = z + atriumSide * d / 2;
+      const rear = z - atriumSide * d / 2;
+      const roomHeight = 2.65;
+      const doorWidth = 1.05;
+      const glassWidth = (w - doorWidth) / 2;
+      box(scene, x, roomHeight / 2, rear, w, roomHeight, meetingWallThickness, wall);
+      box(scene, x, roomHeight - .06, front, w, .12, .12, frame);
+      for (const side of [-1, 1]) {
+        const end = x + side * w / 2;
+        box(scene, end, roomHeight / 2, z, .08, roomHeight, d, '#b4c9d4', glass);
+        box(scene, end, roomHeight - .06, z, .12, .12, d, frame);
+        box(scene, x + side * (doorWidth / 2 + glassWidth / 2), roomHeight / 2, front, glassWidth, roomHeight, .08, '#b4c9d4', glass);
+        for (const jamb of [end, x + side * doorWidth / 2]) {
+          box(scene, jamb, roomHeight / 2, front, .08, roomHeight, .12, frame);
+        }
+      }
+      table(x, z, 3.6, 1.3);
+      for (const offset of [-1.2, 0, 1.2]) {
+        chair(x + offset, z + .98, 1);
+        chair(x + offset, z - .98, -1);
+      }
+      continue;
+    }
+    if (type === 'booth') {
       box(scene, x, 1.04, z - d / 2, w + 1, 2.08, .12, wall);
       box(scene, x - (w + 1) / 2, 1.04, z, .12, 2.08, d, wall);
       box(scene, x + (w + 1) / 2, 1.04, z, .08, 2.08, d, '#b4c9d4', glass);
@@ -117,11 +141,10 @@ export function createOffice(host, { plates, workstations, chairPlacement, deskR
       continue;
     }
 
-    table(x, z, w, type === 'meeting' ? 1.3 : .85);
+    table(x, z, w, .85);
     const seats = w > 3 ? [-1.2, 0, 1.2] : [0];
     for (const offset of seats) {
       chair(x + offset, z + .94, 1);
-      if (type === 'meeting') chair(x + offset, z - .94, -1);
     }
   }
 
