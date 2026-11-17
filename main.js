@@ -74,7 +74,7 @@ const topicTitle = document.querySelector('#topic-title');
 const topicDescription = document.querySelector('#topic-description');
 const topics = [
   { title: topicTitle.textContent, description: topicDescription.innerHTML },
-  { title: 'Dynamic Workstations', description: 'Choose a setting that fits the task. Powered shared tables support short work sessions, individual desks offer a quieter option, and collaboration hubs provide space to work together.' },
+  { title: 'Dynamic Workstations', description: 'Everyone has different workstyle needs. Hybrid schedules mean headcounts fluctuate, so a mix of settings helps people find a place that suits the task and the day.' },
   { title: 'Adaptive Climate', description: 'Match cooling control to how long people stay. Workstations used for more than 2 hours get tighter control. Flexible settings can vary within an illustrative ±2 °C of the setpoint.' },
 ];
 let currentTopic = 0;
@@ -125,7 +125,7 @@ function showPlan() {
   host.innerHTML = `<svg viewBox="-23 -26 46 52" role="img" aria-label="Office floor plan with two wings and a central atrium"><g stroke="#545563" stroke-width=".09">${footprint}${currentTopic === 0 ? clouds : ''}${furniture}</g>${currentTopic === 0 ? '<path d="M20.52 16v8 M20 16h1 M20 24h1" fill="none" stroke="#171717" stroke-width=".09"/><text x="19.95" y="20" text-anchor="end" fill="#171717" font-size=".8" font-family="Arial, sans-serif">≤ 8 m</text>' : ''}</svg>`;
 }
 try {
-  const { createOffice } = await import('./office.js?v=occupied-workplace');
+  const { createOffice } = await import('./office.js?v=workstyle-thoughts');
   officeView = createOffice(host, { plates, workstations, chairPlacement, deskRows, meetingWallThickness, daylightClouds });
   officeView.setTopic(currentTopic);
   officeView.canvas.addEventListener('webglcontextlost', () => {
